@@ -16,6 +16,7 @@ from typing import Dict, List, Optional
 
 from sqlmodel import Session, select
 
+from ..config.constants import CATEGORIA_LABEL
 from ..config.settings import Municipio
 from ..report.aggregate import _parse_data
 from ..store.models import Movimentacao, Processo
@@ -95,11 +96,16 @@ def build_dataset(
             return None
         return max((um - aj).days, 0)
 
+    def _fmt_data(s):
+        d = _parse_data(s)
+        return d.strftime("%d/%m/%Y") if d else (s or "—")
+
     muns_payload = []
     total_processos = 0
     total_onc = 0
     classe_total: Counter = Counter()
     ano_total: Counter = Counter()
+    categoria_total: Counter = Counter()
     tempos_all: List[int] = []
 
     for m in municipios:
@@ -109,12 +115,14 @@ def build_dataset(
         if not procs:
             continue
         classes = Counter(p.classe for p in procs if p.classe)
-        anos = Counter((p.data_ajuizamento or "")[:4] for p in procs if p.data_ajuizamento)
+        anos = Counter(str(_parse_data(p.data_ajuizamento).year) for p in procs if _parse_data(p.data_ajuizamento))
+        cats = Counter(p.categoria or "OUTROS" for p in procs)
         onc = sum(1 for p in procs if p.oncologico)
         tempos = [t for t in (_tramitacao(p) for p in procs) if t is not None]
 
         classe_total.update(classes)
         ano_total.update(anos)
+        categoria_total.update(cats)
         total_processos += len(procs)
         total_onc += onc
         tempos_all.extend(tempos)
@@ -126,15 +134,17 @@ def build_dataset(
             "n_processos": len(procs),
             "n_oncologicos": onc,
             "tempo_medio_dias": round(mean(tempos)) if tempos else None,
-            "classes": classes.most_common(6),
+            "categorias": cats.most_common(),
             "processos": [
                 {
                     "numero": p.numero_processo,
                     "classe": p.classe,
+                    "categoria": p.categoria or "OUTROS",
+                    "assunto": p.assunto_principal,
                     "cid": p.cid,
                     "onc": p.oncologico,
                     "orgao": p.orgao_julgador,
-                    "data": (p.data_ajuizamento or "")[:10],
+                    "data": _fmt_data(p.data_ajuizamento),
                     "tramitacao": _tramitacao(p),
                 }
                 for p in sorted(procs, key=lambda x: x.data_ajuizamento or "", reverse=True)
@@ -155,8 +165,10 @@ def build_dataset(
             "ano_max": anos_ord[-1] if anos_ord else None,
             "tempo_medio_dias": round(mean(tempos_all)) if tempos_all else None,
         },
+        "por_categoria": [[CATEGORIA_LABEL.get(k, k), v] for k, v in categoria_total.most_common()],
         "por_classe": classe_total.most_common(7),
         "por_ano": [[a, ano_total[a]] for a in anos_ord],
+        "cat_labels": CATEGORIA_LABEL,
         "muns": muns_payload,
     }
 
@@ -236,15 +248,16 @@ tr:hover td{background:#f6f9fc}
     <b>Tema 1.234</b> (faixas de ressarcimento / "dinheiro na mesa") depende do custo anual do tratamento,
     que a base pública não fornece — em implementação, mediante fonte de custo.</div>
   <div class="panels">
-    <div class="panel"><h3>Classes processuais mais frequentes</h3><div id="classes"></div></div>
+    <div class="panel"><h3>Tipo de demanda (oportunidade)</h3><div id="categorias"></div></div>
     <div class="panel"><h3>Ações por ano de ajuizamento</h3><div class="yb" id="anos"></div></div>
   </div>
   <div class="toolbar">
     <select id="fuf"><option value="">Todas UFs</option></select>
+    <select id="fcat"><option value="">Todos os tipos de demanda</option></select>
     <input id="busca" placeholder="Buscar município...">
   </div>
   <table><thead><tr>
-    <th>Município</th><th>UF</th><th style="text-align:center">Ações</th>
+    <th>Município</th><th>UF</th><th style="text-align:center" id="thAcoes">Ações</th>
     <th style="text-align:center">Oncológicas*</th><th style="text-align:center">Tempo médio (dias)</th>
   </tr></thead><tbody id="tbody"></tbody></table>
   <div class="foot" id="foot"></div>
@@ -265,9 +278,9 @@ function cards(){
     <div class="card onc"><div class="lbl">Oncológicas sinalizadas*</div><div class="val">${num(t.n_oncologicos)}</div></div>
     <div class="card"><div class="lbl">Período · tempo médio</div><div class="val" style="font-size:16px">${periodo}<br><span style="font-size:13px;color:#7a8794">${num(t.tempo_medio_dias)} dias</span></div></div>`;
 }
-function classes(){
-  const arr=D.por_classe||[], max=Math.max(1,...arr.map(x=>x[1]));
-  document.getElementById('classes').innerHTML = arr.map(([c,n])=>`
+function categorias(){
+  const arr=D.por_categoria||[], max=Math.max(1,...arr.map(x=>x[1]));
+  document.getElementById('categorias').innerHTML = arr.map(([c,n])=>`
     <div class="bar"><div class="name" title="${c}">${c}</div>
       <div class="track"><div class="fill" style="width:${Math.round(n/max*100)}%"></div></div>
       <div class="qtd">${n}</div></div>`).join('') || '<div style="color:#9db2c4">Sem dados.</div>';
@@ -278,25 +291,40 @@ function anos(){
     <div class="col"><div class="colbar" style="height:${Math.round(n/max*90)}px" title="${a}: ${n}"></div>
       <div class="yr">${a}</div></div>`).join('') || '<div style="color:#9db2c4">Sem dados.</div>';
 }
-function ufs(){
+const CATLBL = D.cat_labels||{};
+function filtros(){
   const s=document.getElementById('fuf');
   [...new Set(D.muns.map(m=>m.uf))].filter(Boolean).sort().forEach(u=>{
     const o=document.createElement('option');o.value=u;o.textContent=u;s.appendChild(o);});
+  const c=document.getElementById('fcat');
+  // chaves de categoria presentes nos dados
+  const keys=new Set();
+  D.muns.forEach(m=>(m.categorias||[]).forEach(([k])=>keys.add(k)));
+  Object.keys(CATLBL).filter(k=>keys.has(k)).forEach(k=>{
+    const o=document.createElement('option');o.value=k;o.textContent=CATLBL[k];c.appendChild(o);});
 }
-function drill(m){
+function catCount(m,cat){ if(!cat)return m.n_processos;
+  const e=(m.categorias||[]).find(x=>x[0]===cat); return e?e[1]:0; }
+function drill(m,cat){
+  const procs=cat?m.processos.filter(p=>p.categoria===cat):m.processos;
   return `<td colspan="5"><table><thead><tr>
-    <th>Processo</th><th>Classe</th><th>Órgão julgador</th><th>CID</th>
+    <th>Processo</th><th>Tipo de demanda</th><th>Órgão julgador</th><th>CID</th>
     <th style="text-align:center">Ajuizamento</th><th style="text-align:center">Tramitação (dias)</th>
     </tr></thead><tbody>`+
-    m.processos.map(p=>`<tr><td>${p.numero}</td><td>${p.classe||'—'}</td>
-      <td>${p.orgao||'—'}</td><td>${p.cid||'—'}${p.onc?' <span class="tag">ONCO</span>':''}</td>
+    procs.map(p=>`<tr><td>${p.numero}</td>
+      <td>${CATLBL[p.categoria]||p.categoria}${p.onc?' <span class="tag">ONCO</span>':''}
+        ${p.assunto?'<div style="font-size:10px;color:#9db2c4">'+p.assunto+'</div>':''}</td>
+      <td>${p.orgao||'—'}</td><td>${p.cid||'—'}</td>
       <td style="text-align:center">${p.data||'—'}</td>
       <td style="text-align:center">${num(p.tramitacao)}</td></tr>`).join('')+
     `</tbody></table></td>`;
 }
 function render(){
-  const uf=document.getElementById('fuf').value, q=document.getElementById('busca').value.toLowerCase();
-  const arr=D.muns.filter(m=>(!uf||m.uf===uf)&&(!q||m.mun.toLowerCase().includes(q)));
+  const uf=document.getElementById('fuf').value, cat=document.getElementById('fcat').value,
+        q=document.getElementById('busca').value.toLowerCase();
+  document.getElementById('thAcoes').textContent = cat?('Ações · '+CATLBL[cat]):'Ações';
+  let arr=D.muns.filter(m=>(!uf||m.uf===uf)&&(!q||m.mun.toLowerCase().includes(q)));
+  if(cat){ arr=arr.filter(m=>catCount(m,cat)>0).sort((a,b)=>catCount(b,cat)-catCount(a,cat)); }
   const tb=document.getElementById('tbody');tb.innerHTML='';
   if(!arr.length){
     tb.innerHTML='<tr><td colspan="5" style="text-align:center;color:#7a8794;padding:26px">'+
@@ -307,21 +335,22 @@ function render(){
   arr.forEach(m=>{
     const tr=document.createElement('tr');tr.className='mun-row';
     tr.innerHTML=`<td><b>${m.mun}</b></td><td>${m.uf}</td>
-      <td style="text-align:center">${num(m.n_processos)}</td>
+      <td style="text-align:center"><b>${num(catCount(m,cat))}</b></td>
       <td style="text-align:center">${m.n_oncologicos?'<span class="tag">'+m.n_oncologicos+'</span>':'0'}</td>
       <td style="text-align:center">${num(m.tempo_medio_dias)}</td>`;
     let aberto=false, drow=null;
     tr.onclick=()=>{ if(aberto){drow.remove();aberto=false;return;}
-      drow=document.createElement('tr');drow.className='drill';drow.innerHTML=drill(m);
+      drow=document.createElement('tr');drow.className='drill';drow.innerHTML=drill(m,cat);
       tr.after(drow);aberto=true; };
     tb.appendChild(tr);
   });
   document.getElementById('foot').innerHTML =
-    'Volume a partir de metadados processuais públicos (DataJud/CNJ). Sem dados pessoais identificáveis (LGPD).<br>'+
-    '*Oncológicas: sinalização heurística por CID/assunto. © G3 Health Service · build __BUILD__';
+    'Volume e tipo de demanda a partir de metadados processuais públicos (DataJud/CNJ). Sem dados pessoais identificáveis (LGPD).<br>'+
+    'Tipo de demanda derivado do assunto (TPU/CNJ). *Oncológicas por CID/assunto. © G3 Health Service · build __BUILD__';
 }
-cards();classes();anos();ufs();render();
+cards();categorias();anos();filtros();render();
 document.getElementById('fuf').onchange=render;
+document.getElementById('fcat').onchange=render;
 document.getElementById('busca').oninput=render;
 </script>
 </body></html>"""

@@ -74,7 +74,9 @@ def detectar_pii(source: Dict[str, Any]) -> List[str]:
     (classe/assunto/orgaoJulgador/movimento designam entidades, nao pessoas).
     """
     suspeitas: List[str] = []
-    campos_nome_ok = {"classe", "assuntos", "orgaoJulgador", "movimentos"}
+    # Estruturas onde 'nome' designa uma entidade (nao pessoa): classe/assunto/
+    # orgao/movimento e metadados tecnicos (sistema=PJe, formato=Eletronico).
+    campos_nome_ok = {"classe", "assuntos", "orgaoJulgador", "movimentos", "sistema", "formato"}
 
     def _walk(obj: Any, caminho: str, dentro_de_estrutura_ok: bool) -> None:
         if isinstance(obj, dict):

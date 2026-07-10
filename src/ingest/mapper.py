@@ -5,7 +5,7 @@ import json
 import re
 from typing import Dict, List, Optional
 
-from ..config.constants import CID_ONCOLOGICO_PREFIXOS
+from ..config.constants import CID_ONCOLOGICO_PREFIXOS, categoria_de_assuntos
 from ..config.settings import Municipio
 
 _CID_RE = re.compile(r"\b([CD]\d{2})(?:\.\d+)?\b")
@@ -20,6 +20,14 @@ def _extrair_assuntos(source: dict) -> List[int]:
                 out.append(int(cod))
             except (TypeError, ValueError):
                 continue
+    return out
+
+
+def _nomes_assuntos(source: dict) -> List[str]:
+    out = []
+    for a in source.get("assuntos", []) or []:
+        if a.get("nome"):
+            out.append(str(a["nome"]))
     return out
 
 
@@ -98,7 +106,9 @@ def map_source_to_processo_fields(
     """Constroi o dict de campos do Processo (sem tocar no banco)."""
     texto = _texto_objeto(source)
     cid = detectar_cid(texto)
-    onc = is_oncologico(cid, texto)
+    nomes_ass = _nomes_assuntos(source)
+    categoria = categoria_de_assuntos(nomes_ass)
+    onc = is_oncologico(cid, texto) or categoria == "ONCOLOGICO"
     custo, origem = estimar_custo(source, cmed_resultado)
     orgao = source.get("orgaoJulgador") or {}
     ibge = orgao.get("codigoMunicipioIBGE")
@@ -118,6 +128,8 @@ def map_source_to_processo_fields(
         "farmaco": None,
         "cid": cid,
         "oncologico": onc,
+        "categoria": categoria,
+        "assunto_principal": nomes_ass[0] if nomes_ass else None,
         "custo_anual_estimado": custo,
         "origem_estimativa": origem,
     }

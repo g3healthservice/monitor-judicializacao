@@ -47,6 +47,8 @@ class Processo(SQLModel, table=True):
     farmaco: Optional[str] = None
     cid: Optional[str] = None
     oncologico: bool = Field(default=False)
+    categoria: Optional[str] = Field(default=None, index=True)  # tipo de demanda (MEDICAMENTO, ONCOLOGICO...)
+    assunto_principal: Optional[str] = None  # nome do assunto TPU
 
     # Classificacao Tema 1.234
     custo_anual_estimado: Optional[float] = None

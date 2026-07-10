@@ -34,6 +34,48 @@ ASSUNTOS_SAUDE = [
     12511, 12512, 12513, 12514, 12515, 12516, 12517, 12518, 12519,
 ]
 
+# Categorias de demanda (para o consultor mapear oportunidade por tipo).
+# Derivadas do NOME do assunto (TPU) que vem na resposta do DataJud — nao de
+# dado de paciente. Ordem importa: a primeira que casar define a categoria.
+CATEGORIAS_DEMANDA = [
+    ("ONCOLOGICO", ("oncolog", "neoplas", "cancer", "câncer", "quimioter", "antineoplas")),
+    ("MEDICAMENTO_NAO_PADRONIZADO", ("nao padroniz", "não padroniz", "nao incorpor", "não incorpor")),
+    ("MEDICAMENTO", ("medicament", "farmac", "fármac")),
+    ("INSUMO", ("insumo",)),
+    ("ORTESE_PROTESE", ("ortese", "órtese", "protese", "prótese", "opme")),
+    ("TRATAMENTO", ("tratamento", "internac", "hospital", "uti", "home care", "cirurg")),
+    ("EXAME_CONSULTA", ("exame", "consulta", "procedimento")),
+    ("PLANO_SAUDE", ("plano de saude", "plano de saúde", "seguro saude", "convenio", "convênio")),
+]
+
+CATEGORIA_LABEL = {
+    "ONCOLOGICO": "Oncológico",
+    "MEDICAMENTO_NAO_PADRONIZADO": "Medicamento não padronizado (alto custo/raro)",
+    "MEDICAMENTO": "Medicamento",
+    "INSUMO": "Insumo",
+    "ORTESE_PROTESE": "Órtese/Prótese (OPME)",
+    "TRATAMENTO": "Tratamento/Internação",
+    "EXAME_CONSULTA": "Exame/Consulta",
+    "PLANO_SAUDE": "Plano de saúde (convênio)",
+    "OUTROS": "Outros",
+}
+
+
+def _sem_acento(s: str) -> str:
+    import unicodedata
+    s = unicodedata.normalize("NFKD", s)
+    return "".join(c for c in s if not unicodedata.combining(c))
+
+
+def categoria_de_assuntos(nomes) -> str:
+    """Classifica o tipo de demanda a partir dos nomes de assunto do processo."""
+    texto = _sem_acento(" | ".join(n for n in (nomes or []) if n).lower())
+    for cat, termos in CATEGORIAS_DEMANDA:
+        if any(_sem_acento(t) in texto for t in termos):
+            return cat
+    return "OUTROS"
+
+
 # Capitulo II da CID-10 (neoplasias): C00-C97 e D00-D48.
 # Usado como heuristica v1 para marcar oncologico quando ha CID no objeto.
 CID_ONCOLOGICO_PREFIXOS = tuple(

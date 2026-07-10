@@ -30,7 +30,25 @@ def test_build_query_filtra_assuntos_e_ibge():
     assert any("orgaoJulgador.codigoMunicipioIBGE" in f.get("terms", {}) for f in filtros)
     assert q["size"] == 50
     assert q["search_after"] == [1, "x"]
-    assert q["sort"][0]["dataAjuizamento"]["order"] == "asc"
+    assert q["sort"][0]["dataAjuizamento"]["order"] == "desc"  # mais recentes primeiro
+
+
+def test_build_query_data_compacta():
+    # Data ISO deve virar formato compacto (senao o filtro do DataJud nao casa).
+    q = build_query(data_ajuizamento_gte="2026-01-01")
+    filtros = q["query"]["bool"]["filter"]
+    rng = next(f for f in filtros if "range" in f)
+    assert rng["range"]["dataAjuizamento"]["gte"] == "20260101"
+
+
+def test_categoria_de_assuntos():
+    from src.config.constants import categoria_de_assuntos
+    assert categoria_de_assuntos(["Fornecimento de medicamentos"]) == "MEDICAMENTO"
+    assert categoria_de_assuntos(["Oncológico"]) == "ONCOLOGICO"
+    assert categoria_de_assuntos(["Não padronizado"]) == "MEDICAMENTO_NAO_PADRONIZADO"
+    assert categoria_de_assuntos(["Fornecimento de insumos"]) == "INSUMO"
+    assert categoria_de_assuntos(["Plano de Saúde"]) == "PLANO_SAUDE"
+    assert categoria_de_assuntos([]) == "OUTROS"
 
 
 def test_detectar_cid():

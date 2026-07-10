@@ -31,10 +31,15 @@ log = get_logger("pipeline")
 
 
 def _data_inicial(settings: Settings, checkpoint_ts: Optional[str]) -> str:
-    if checkpoint_ts:
-        return checkpoint_ts
+    """Janela de busca (formato compacto YYYYMMDD). Foca em processos RECENTES.
+
+    Usa o maior entre (checkpoint) e (hoje - lookback), para nao regredir para
+    processos antigos e manter o radar em torno da demanda atual.
+    """
     inicio = datetime.now(timezone.utc) - timedelta(days=settings.ingest_lookback_dias)
-    return inicio.date().isoformat()
+    janela = inicio.strftime("%Y%m%d")
+    cp = "".join(ch for ch in str(checkpoint_ts) if ch.isdigit())[:8] if checkpoint_ts else None
+    return max(janela, cp) if cp else janela
 
 
 async def ingerir_tribunal(
@@ -65,7 +70,9 @@ async def ingerir_tribunal(
 
     with get_session(database_url) as session:
         cp = repo.get_checkpoint(session, tribunal)
-        cursor = json.loads(cp.ultimo_search_after) if cp and cp.ultimo_search_after else None
+        # Radar de demanda recente: cada run varre a janela atual (ordem desc, mais
+        # recentes primeiro) e faz upsert idempotente — nao resume cursor antigo.
+        cursor = None
         data_gte = _data_inicial(settings, cp.ultimo_timestamp if cp else None)
 
         owns = client is None
