@@ -11,25 +11,14 @@ import json
 from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
+from statistics import mean
 from typing import Dict, List, Optional
 
 from sqlmodel import Session, select
 
-from ..config.constants import (
-    FAIXA_ESTADUAL,
-    FAIXA_FEDERAL,
-    FAIXA_LOCAL,
-    FAIXA_ONCOLOGICO,
-)
 from ..config.settings import Municipio
-from ..store.models import Processo
-
-_FAIXA_LABEL = {
-    FAIXA_FEDERAL: "Federal — União 100%",
-    FAIXA_ESTADUAL: "Estadual — União 65%",
-    FAIXA_ONCOLOGICO: "Oncológico — União 80%",
-    FAIXA_LOCAL: "Local — sem ressarcimento",
-}
+from ..report.aggregate import _parse_data
+from ..store.models import Movimentacao, Processo
 
 # Trava de acesso por convite (G3 Access Gate). Mesmo segredo mestre dos demais
 # dashboards G3; tool code "jd" (judicializacao). Token com perm=true abre tudo.
@@ -88,11 +77,30 @@ def build_dataset(
     if not municipios:
         municipios = _municipios_do_banco(session, ibge_map)
 
+    # Tempos de tramitacao (bulk): ultimo movimento por processo.
+    movs = session.exec(select(Movimentacao)).all()
+    ult_mov: Dict[str, datetime] = {}
+    for mv in movs:
+        d = _parse_data(mv.data)
+        if d is None:
+            continue
+        cur = ult_mov.get(mv.numero_processo)
+        if cur is None or d > cur:
+            ult_mov[mv.numero_processo] = d
+
+    def _tramitacao(p: Processo):
+        aj = _parse_data(p.data_ajuizamento)
+        um = ult_mov.get(p.numero_processo)
+        if aj is None or um is None:
+            return None
+        return max((um - aj).days, 0)
+
     muns_payload = []
-    total_faixas: Counter = Counter()
-    total_ressarcivel = 0.0
     total_processos = 0
-    total_enquadraveis = 0
+    total_onc = 0
+    classe_total: Counter = Counter()
+    ano_total: Counter = Counter()
+    tempos_all: List[int] = []
 
     for m in municipios:
         procs: List[Processo] = session.exec(
@@ -100,55 +108,55 @@ def build_dataset(
         ).all()
         if not procs:
             continue
-        faixas: Counter = Counter(p.faixa for p in procs)
-        valor = sum(p.valor_ressarcivel_estimado or 0.0 for p in procs)
-        cids = Counter(p.cid for p in procs if p.cid)
-        enquadraveis = sum(1 for p in procs if p.faixa and p.faixa != FAIXA_LOCAL)
+        classes = Counter(p.classe for p in procs if p.classe)
+        anos = Counter((p.data_ajuizamento or "")[:4] for p in procs if p.data_ajuizamento)
+        onc = sum(1 for p in procs if p.oncologico)
+        tempos = [t for t in (_tramitacao(p) for p in procs) if t is not None]
 
-        total_faixas.update(faixas)
-        total_ressarcivel += valor
+        classe_total.update(classes)
+        ano_total.update(anos)
         total_processos += len(procs)
-        total_enquadraveis += enquadraveis
+        total_onc += onc
+        tempos_all.extend(tempos)
 
         muns_payload.append({
             "mun": m.nome,
             "uf": m.uf,
             "ibge": m.codigo_ibge,
-            "comarca": (procs[0].comarca if procs else None),
             "n_processos": len(procs),
-            "n_enquadraveis": enquadraveis,
-            "valor_ressarcivel": round(valor, 2),
-            "faixas": dict(faixas),
-            "top_cids": cids.most_common(8),
+            "n_oncologicos": onc,
+            "tempo_medio_dias": round(mean(tempos)) if tempos else None,
+            "classes": classes.most_common(6),
             "processos": [
                 {
                     "numero": p.numero_processo,
-                    "faixa": p.faixa,
-                    "pct": p.percentual_ressarcivel,
-                    "custo": p.custo_anual_estimado,
-                    "ressarcivel": p.valor_ressarcivel_estimado,
+                    "classe": p.classe,
                     "cid": p.cid,
                     "onc": p.oncologico,
-                    "justica": p.justica_competente,
+                    "orgao": p.orgao_julgador,
                     "data": (p.data_ajuizamento or "")[:10],
+                    "tramitacao": _tramitacao(p),
                 }
-                for p in sorted(procs, key=lambda x: x.valor_ressarcivel_estimado or 0, reverse=True)
+                for p in sorted(procs, key=lambda x: x.data_ajuizamento or "", reverse=True)
             ],
         })
 
-    muns_payload.sort(key=lambda x: x["valor_ressarcivel"], reverse=True)
+    muns_payload.sort(key=lambda x: x["n_processos"], reverse=True)
+    anos_ord = sorted(a for a in ano_total if a.isdigit())
 
     return {
         "gerado_em": datetime.now(timezone.utc).astimezone().strftime("%d/%m/%Y %H:%M"),
         "build": datetime.now().strftime("%Y-%m-%d %H:%M"),
         "totais": {
             "n_processos": total_processos,
-            "n_enquadraveis": total_enquadraveis,
             "n_municipios": len(muns_payload),
-            "valor_total_ressarcivel": round(total_ressarcivel, 2),
-            "faixas": dict(total_faixas),
+            "n_oncologicos": total_onc,
+            "ano_min": anos_ord[0] if anos_ord else None,
+            "ano_max": anos_ord[-1] if anos_ord else None,
+            "tempo_medio_dias": round(mean(tempos_all)) if tempos_all else None,
         },
-        "faixa_labels": _FAIXA_LABEL,
+        "por_classe": classe_total.most_common(7),
+        "por_ano": [[a, ano_total[a]] for a in anos_ord],
         "muns": muns_payload,
     }
 
@@ -170,7 +178,7 @@ __GATE__
 <meta name="robots" content="noindex,nofollow">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>Radar de Judicialização de Medicamentos — Tema 1.234 · G3</title>
+<title>Radar de Volume de Judicialização de Saúde · G3</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:Arial,Helvetica,sans-serif;background:#d6dde5;color:#1f2933;font-size:13px}
@@ -180,19 +188,25 @@ body{font-family:Arial,Helvetica,sans-serif;background:#d6dde5;color:#1f2933;fon
 .hdr h1{font-size:23px;font-weight:800;letter-spacing:-.4px}
 .hdr .sub{font-size:12px;opacity:.85;margin-top:4px}
 .wrap{padding:18px 22px;max-width:1200px;margin:0 auto}
-.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}
 .card{background:#fff;border-radius:10px;padding:14px 16px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
 .card .lbl{font-size:11px;color:#7a8794;text-transform:uppercase;letter-spacing:.4px}
 .card .val{font-size:24px;font-weight:800;color:#0b3349;margin-top:4px}
-.card.money .val{color:#1e7e34}
-.faixabars{background:#fff;border-radius:10px;padding:16px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
-.faixabars h3{font-size:13px;color:#0b3349;margin-bottom:12px}
-.bar{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:12px}
-.bar .name{width:210px;color:#465a6b}
-.bar .track{flex:1;background:#eef1f4;border-radius:6px;height:20px;overflow:hidden}
-.bar .fill{height:100%;border-radius:6px}
-.bar .qtd{width:44px;text-align:right;font-weight:700;color:#0b3349}
-.fed{background:#c0392b}.est{background:#e67e22}.onc{background:#8e44ad}.loc{background:#95a5a6}
+.card.onc .val{color:#8e44ad}
+.aviso{background:#fef6e0;border:1px solid #f0d48a;color:#7a5b12;border-radius:8px;
+  padding:9px 13px;font-size:11.5px;margin-bottom:14px;line-height:1.5}
+.panels{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.panel{background:#fff;border-radius:10px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.panel h3{font-size:13px;color:#0b3349;margin-bottom:12px}
+.bar{display:flex;align-items:center;gap:10px;margin-bottom:7px;font-size:11.5px}
+.bar .name{width:150px;color:#465a6b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar .track{flex:1;background:#eef1f4;border-radius:5px;height:16px;overflow:hidden}
+.bar .fill{height:100%;border-radius:5px;background:#15506f}
+.bar .qtd{width:38px;text-align:right;font-weight:700;color:#0b3349}
+.yb{display:flex;align-items:flex-end;gap:3px;height:110px}
+.yb .col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:3px}
+.yb .colbar{width:100%;background:#2e86c1;border-radius:3px 3px 0 0}
+.yb .yr{font-size:9px;color:#7a8794;transform:rotate(-45deg);white-space:nowrap}
 .toolbar{display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
 .toolbar select,.toolbar input{padding:8px 10px;border:1px solid #c3ccd6;border-radius:6px;font-size:12px;background:#fff}
 .toolbar input{flex:1;min-width:200px}
@@ -201,77 +215,82 @@ table{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;ove
 th{background:#0e3d59;color:#fff;padding:10px;font-size:11px;text-align:left;font-weight:600}
 td{padding:9px 10px;border-bottom:1px solid #eef1f4;font-size:12px}
 tr:hover td{background:#f6f9fc}
-.pill{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10.5px;font-weight:700;color:#fff}
 .mun-row{cursor:pointer}
+.mun-row td:first-child::before{content:"▸ ";color:#9db2c4}
 .drill{background:#f0f4f8}
 .drill table{box-shadow:none;border-radius:0}
-.money{color:#1e7e34;font-weight:700}
+.tag{display:inline-block;background:#8e44ad;color:#fff;padding:1px 7px;border-radius:9px;font-size:10px;font-weight:700}
 .foot{margin:22px 0 8px;font-size:11px;color:#7a8794;text-align:center;line-height:1.6}
 </style></head>
 <body>
 <div class="hdr">
-  <div><h1>Radar de Judicialização de Medicamentos</h1>
-    <div class="sub" id="hsub">Enquadramento Tema 1.234/STF · Súmulas Vinculantes 60 e 61</div></div>
+  <div><h1>Radar de Volume de Judicialização de Saúde</h1>
+    <div class="sub" id="hsub"></div></div>
   <div style="text-align:right;font-size:11px;opacity:.85">G3 Health Service<br><b>build __BUILD__</b></div>
 </div>
 <div class="wrap">
   <div class="summary" id="summary"></div>
-  <div class="faixabars"><h3>Distribuição por faixa (Tema 1.234)</h3><div id="bars"></div></div>
+  <div class="aviso">⚖️ <b>Volume</b> a partir de metadados públicos do DataJud/CNJ. O enquadramento no
+    <b>Tema 1.234</b> (faixas de ressarcimento / "dinheiro na mesa") depende do custo anual do tratamento,
+    que a base pública não fornece — em implementação, mediante fonte de custo.</div>
+  <div class="panels">
+    <div class="panel"><h3>Classes processuais mais frequentes</h3><div id="classes"></div></div>
+    <div class="panel"><h3>Ações por ano de ajuizamento</h3><div class="yb" id="anos"></div></div>
+  </div>
   <div class="toolbar">
     <select id="fuf"><option value="">Todas UFs</option></select>
     <input id="busca" placeholder="Buscar município...">
   </div>
   <table><thead><tr>
-    <th>Município</th><th>UF</th><th style="text-align:center">Processos</th>
-    <th style="text-align:center">Enquadráveis</th><th style="text-align:right">Dinheiro na mesa</th>
+    <th>Município</th><th>UF</th><th style="text-align:center">Ações</th>
+    <th style="text-align:center">Oncológicas*</th><th style="text-align:center">Tempo médio (dias)</th>
   </tr></thead><tbody id="tbody"></tbody></table>
   <div class="foot" id="foot"></div>
 </div>
 <script>
 const D = __DADOS__;
-const LBL = D.faixa_labels;
-const CLS = {FEDERAL_100:'fed',ESTADUAL_65:'est',ONCOLOGICO_80:'onc',LOCAL_SEM_RESSARCIMENTO:'loc'};
-const brl = v => 'R$ '+(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
-const pct = v => Math.round((v||0)*100)+'%';
+const num = v => (v==null?'—':Number(v).toLocaleString('pt-BR'));
 
 document.getElementById('hsub').innerHTML =
-  D.totais.n_municipios+' municípios · '+D.totais.n_processos+' processos · atualizado '+D.gerado_em;
+  D.totais.n_municipios+' municípios · '+D.totais.n_processos+' ações · atualizado '+D.gerado_em;
 
 function cards(){
   const t=D.totais;
+  const periodo = (t.ano_min&&t.ano_max)?(t.ano_min+'–'+t.ano_max):'—';
   document.getElementById('summary').innerHTML = `
-    <div class="card"><div class="lbl">Municípios monitorados</div><div class="val">${t.n_municipios}</div></div>
-    <div class="card"><div class="lbl">Processos de saúde</div><div class="val">${t.n_processos}</div></div>
-    <div class="card"><div class="lbl">Ações enquadráveis</div><div class="val">${t.n_enquadraveis}</div></div>
-    <div class="card money"><div class="lbl">Dinheiro na mesa (União)</div><div class="val">${brl(t.valor_total_ressarcivel)}</div></div>`;
+    <div class="card"><div class="lbl">Ações de saúde</div><div class="val">${num(t.n_processos)}</div></div>
+    <div class="card"><div class="lbl">Municípios</div><div class="val">${num(t.n_municipios)}</div></div>
+    <div class="card onc"><div class="lbl">Oncológicas sinalizadas*</div><div class="val">${num(t.n_oncologicos)}</div></div>
+    <div class="card"><div class="lbl">Período · tempo médio</div><div class="val" style="font-size:16px">${periodo}<br><span style="font-size:13px;color:#7a8794">${num(t.tempo_medio_dias)} dias</span></div></div>`;
 }
-function bars(){
-  const f=D.totais.faixas, max=Math.max(1,...Object.values(f));
-  const ordem=['FEDERAL_100','ONCOLOGICO_80','ESTADUAL_65','LOCAL_SEM_RESSARCIMENTO'];
-  document.getElementById('bars').innerHTML = ordem.map(k=>{
-    const q=f[k]||0, w=Math.round(q/max*100);
-    return `<div class="bar"><div class="name">${LBL[k]}</div>
-      <div class="track"><div class="fill ${CLS[k]}" style="width:${w}%"></div></div>
-      <div class="qtd">${q}</div></div>`;
-  }).join('');
+function classes(){
+  const arr=D.por_classe||[], max=Math.max(1,...arr.map(x=>x[1]));
+  document.getElementById('classes').innerHTML = arr.map(([c,n])=>`
+    <div class="bar"><div class="name" title="${c}">${c}</div>
+      <div class="track"><div class="fill" style="width:${Math.round(n/max*100)}%"></div></div>
+      <div class="qtd">${n}</div></div>`).join('') || '<div style="color:#9db2c4">Sem dados.</div>';
+}
+function anos(){
+  const arr=(D.por_ano||[]).slice(-14), max=Math.max(1,...arr.map(x=>x[1]));
+  document.getElementById('anos').innerHTML = arr.map(([a,n])=>`
+    <div class="col"><div class="colbar" style="height:${Math.round(n/max*90)}px" title="${a}: ${n}"></div>
+      <div class="yr">${a}</div></div>`).join('') || '<div style="color:#9db2c4">Sem dados.</div>';
 }
 function ufs(){
   const s=document.getElementById('fuf');
-  [...new Set(D.muns.map(m=>m.uf))].sort().forEach(u=>{
+  [...new Set(D.muns.map(m=>m.uf))].filter(Boolean).sort().forEach(u=>{
     const o=document.createElement('option');o.value=u;o.textContent=u;s.appendChild(o);});
 }
 function drill(m){
-  return `<tr class="drill"><td colspan="5"><table><thead><tr>
-    <th>Processo</th><th>Faixa</th><th style="text-align:center">% União</th>
-    <th style="text-align:right">Custo anual est.</th><th style="text-align:right">Ressarcível</th>
-    <th>CID</th><th>Ajuizamento</th></tr></thead><tbody>`+
-    m.processos.map(p=>`<tr><td>${p.numero}</td>
-      <td><span class="pill ${CLS[p.faixa]}">${LBL[p.faixa]||p.faixa}</span></td>
-      <td style="text-align:center">${pct(p.pct)}</td>
-      <td style="text-align:right">${p.custo!=null?brl(p.custo):'—'}</td>
-      <td style="text-align:right" class="money">${p.ressarcivel!=null?brl(p.ressarcivel):'—'}</td>
-      <td>${p.cid||'—'}${p.onc?' 🎗️':''}</td><td>${p.data||'—'}</td></tr>`).join('')+
-    `</tbody></table></td></tr>`;
+  return `<td colspan="5"><table><thead><tr>
+    <th>Processo</th><th>Classe</th><th>Órgão julgador</th><th>CID</th>
+    <th style="text-align:center">Ajuizamento</th><th style="text-align:center">Tramitação (dias)</th>
+    </tr></thead><tbody>`+
+    m.processos.map(p=>`<tr><td>${p.numero}</td><td>${p.classe||'—'}</td>
+      <td>${p.orgao||'—'}</td><td>${p.cid||'—'}${p.onc?' <span class="tag">ONCO</span>':''}</td>
+      <td style="text-align:center">${p.data||'—'}</td>
+      <td style="text-align:center">${num(p.tramitacao)}</td></tr>`).join('')+
+    `</tbody></table></td>`;
 }
 function render(){
   const uf=document.getElementById('fuf').value, q=document.getElementById('busca').value.toLowerCase();
@@ -286,21 +305,20 @@ function render(){
   arr.forEach(m=>{
     const tr=document.createElement('tr');tr.className='mun-row';
     tr.innerHTML=`<td><b>${m.mun}</b></td><td>${m.uf}</td>
-      <td style="text-align:center">${m.n_processos}</td>
-      <td style="text-align:center">${m.n_enquadraveis}</td>
-      <td style="text-align:right" class="money">${brl(m.valor_ressarcivel)}</td>`;
+      <td style="text-align:center">${num(m.n_processos)}</td>
+      <td style="text-align:center">${m.n_oncologicos?'<span class="tag">'+m.n_oncologicos+'</span>':'0'}</td>
+      <td style="text-align:center">${num(m.tempo_medio_dias)}</td>`;
     let aberto=false, drow=null;
     tr.onclick=()=>{ if(aberto){drow.remove();aberto=false;return;}
-      drow=document.createElement('tr');drow.innerHTML=drill(m).replace(/^<tr class="drill">|<\/tr>$/g,'');
-      drow.className='drill';drow.innerHTML=drill(m);
+      drow=document.createElement('tr');drow.className='drill';drow.innerHTML=drill(m);
       tr.after(drow);aberto=true; };
     tb.appendChild(tr);
   });
   document.getElementById('foot').innerHTML =
-    'Estimativas a partir de metadados processuais públicos (DataJud/CNJ). Sem dados pessoais identificáveis (LGPD).<br>'+
-    'Faixas do Tema 1.234 derivadas do salário mínimo vigente. © G3 Health Service · build __BUILD__';
+    'Volume a partir de metadados processuais públicos (DataJud/CNJ). Sem dados pessoais identificáveis (LGPD).<br>'+
+    '*Oncológicas: sinalização heurística por CID/assunto. © G3 Health Service · build __BUILD__';
 }
-cards();bars();ufs();render();
+cards();classes();anos();ufs();render();
 document.getElementById('fuf').onchange=render;
 document.getElementById('busca').oninput=render;
 </script>

@@ -14,13 +14,23 @@ from ..store.models import Movimentacao, Processo
 def _parse_data(s: Optional[str]) -> Optional[datetime]:
     if not s:
         return None
+    s = str(s).strip()
+    # DataJud usa dataAjuizamento no formato compacto YYYYMMDDHHMMSS (ou YYYYMMDD).
+    if s.isdigit():
+        for fmt in ("%Y%m%d%H%M%S", "%Y%m%d"):
+            try:
+                return datetime.strptime(s, fmt)
+            except ValueError:
+                continue
+        return None
+    limpo = s.replace("Z", "")
     for fmt in ("%Y-%m-%dT%H:%M:%S.%f", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%d"):
         try:
-            return datetime.strptime(s[: len(fmt) + 6], fmt)
+            return datetime.strptime(limpo[: len(fmt) + 6], fmt)
         except ValueError:
             continue
     try:
-        return datetime.fromisoformat(s.replace("Z", ""))
+        return datetime.fromisoformat(limpo)
     except ValueError:
         return None
 
