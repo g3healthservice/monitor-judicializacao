@@ -12,7 +12,7 @@ from typing import Dict, List, Optional
 from .alert.dispatcher import despachar_alerta
 from .classify.tema1234 import classificar
 from .config.constants import FAIXA_LOCAL
-from .config.geo import load_ibge_map, resolve_ibge
+from .config.geo import load_ibge_map, municipio_from_orgao, resolve_ibge
 from .config.logging_setup import get_logger
 from .config.settings import Municipio, Settings, get_settings
 from .enrich.connectors import CMEDConnector
@@ -45,6 +45,7 @@ async def ingerir_tribunal(
     max_paginas: Optional[int] = None,
     database_url: Optional[str] = None,
     ibge_map: Optional[dict] = None,
+    uf: Optional[str] = None,
 ) -> Dict[str, int]:
     """Ingesta incremental de um tribunal. Retorna contadores da execucao.
 
@@ -93,8 +94,12 @@ async def ingerir_tribunal(
                 limpo = sanitize(source)
 
                 if modo_inteiro:
-                    ibge = (limpo.get("orgaoJulgador") or {}).get("codigoMunicipioIBGE")
-                    municipio = resolve_ibge(ibge, tribunal, ibge_map)
+                    orgao = limpo.get("orgaoJulgador") or {}
+                    ibge = orgao.get("codigoMunicipioIBGE")
+                    municipio = resolve_ibge(ibge, tribunal, ibge_map) if ibge else None
+                    if municipio is None and uf:
+                        # DataJud publico costuma omitir o IBGE: deriva do nome do orgao.
+                        municipio = municipio_from_orgao(orgao.get("nome"), uf, tribunal)
                 else:
                     municipio = resolver_municipio(limpo, municipios)
                 cmed_res = cmed.enriquecer({"source": limpo})

@@ -27,22 +27,23 @@ def _cmd_run(args):
     init_db()
 
     if args.curado:
-        # Modo curado: usa config/municipios.yaml (filtra por municipio).
+        # Modo curado: config/municipios.yaml (filtra por municipio, sem derivar UF).
         grupos = municipios_por_tribunal(load_municipios())
-        alvos = [(trib, muns) for trib, muns in grupos.items()
+        alvos = [(trib, muns, None) for trib, muns in grupos.items()
                  if not args.tribunal or trib == args.tribunal]
     else:
         # Modo Brasil inteiro: config/tribunais.yaml (27 TJs), sem filtro de municipio.
         tribunais = load_tribunais()
-        alvos = [(t.sigla, None) for t in tribunais
+        alvos = [(t.sigla, None, t.uf) for t in tribunais
                  if (not args.tribunal or t.sigla == args.tribunal)
                  and (not args.uf or t.uf == args.uf.upper())]
 
     async def _run():
         totais = {}
-        for tribunal, muns in alvos:
+        for tribunal, muns, uf in alvos:
             totais[tribunal] = await ingerir_tribunal(
-                tribunal, muns, settings=settings, max_paginas=args.max_paginas
+                tribunal, muns, settings=settings,
+                max_paginas=args.max_paginas, uf=uf,
             )
         return totais
 

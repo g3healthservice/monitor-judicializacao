@@ -1,5 +1,5 @@
 """Modo Brasil inteiro: resolucao de municipio pela tabela IBGE."""
-from src.config.geo import load_ibge_map, resolve_ibge
+from src.config.geo import load_ibge_map, municipio_from_orgao, resolve_ibge
 from src.config.settings import load_tribunais
 
 
@@ -27,6 +27,18 @@ def test_resolve_ibge_6digitos():
 def test_resolve_ibge_desconhecido():
     assert resolve_ibge("9999999", "tjsp") is None
     assert resolve_ibge(None, "tjsp") is None
+
+
+def test_municipio_from_orgao():
+    # Nome do orgao carrega o municipio (DataJud publico omite o IBGE).
+    assert municipio_from_orgao("01 FAZENDA PUBLICA DE BAURU", "SP", "tjsp").nome == "Bauru"
+    assert municipio_from_orgao("02 FAZENDA PUBLICA DE CAMPINAS", "SP", "tjsp").codigo_ibge == "3509502"
+    # Foro CENTRAL designa a capital.
+    assert municipio_from_orgao("SETOR ... FAZENDA PUBLICA DE CENTRAL", "SP", "tjsp").codigo_ibge == "3550308"
+    # 'D Oeste' nao pode quebrar o nome.
+    assert municipio_from_orgao("02 CIVEL DE SANTA BARBARA D OESTE", "SP", "tjsp").nome == "Santa Bárbara d'Oeste"
+    # Camara de 2a instancia nao tem municipio.
+    assert municipio_from_orgao("13 CAMARA DE DIREITO PUBLICO", "SP", "tjsp") is None
 
 
 def test_tribunais_27_tjs():

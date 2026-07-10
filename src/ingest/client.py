@@ -64,8 +64,17 @@ class DataJudClient:
             try:
                 resp = await self._client.post(self.url, headers=self._headers, json=corpo)
             except httpx.TransportError as exc:
+                # DataJud costuma derrubar conexoes (throttling): registra tipo p/ diagnostico.
                 if tentativa == tentativas:
-                    raise DataJudError(f"Falha de transporte: {exc}") from exc
+                    raise DataJudError(
+                        f"Falha de transporte apos {tentativas} tentativas: "
+                        f"{type(exc).__name__}: {exc}"
+                    ) from exc
+                log.warning(
+                    "transporte_retry",
+                    extra={"contexto": {"tribunal": self.tribunal, "tentativa": tentativa,
+                                        "erro": type(exc).__name__}},
+                )
                 await self._backoff(tentativa)
                 continue
 
