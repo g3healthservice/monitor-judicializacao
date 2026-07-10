@@ -161,11 +161,13 @@ def build_dataset(
     }
 
 
-def gerar_dashboard(payload: Dict, destino: Path) -> Path:
+def gerar_dashboard(payload: Dict, destino: Path, com_gate: bool = False) -> Path:
+    """Gera o HTML. com_gate=True aplica a trava de acesso por convite (G3 Access
+    Gate); por padrao o painel e aberto (sem senha/restricao)."""
     destino = Path(destino)
     destino.parent.mkdir(parents=True, exist_ok=True)
     html = _HTML_TEMPLATE.replace("__DADOS__", json.dumps(payload, ensure_ascii=False))
-    html = html.replace("__GATE__", _ACCESS_GATE)
+    html = html.replace("__GATE__", _ACCESS_GATE if com_gate else "")
     html = html.replace("__BUILD__", payload["build"])
     destino.write_text(html, encoding="utf-8")
     return destino
