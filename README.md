@@ -88,6 +88,25 @@ python -m src.cli run --tribunal tjsp
 python -m src.cli report --ibge 3550308
 ```
 
+### Online (em producao)
+
+- **Site:** <https://g3healthservice.github.io/monitor-judicializacao/> (acesso por convite)
+- **Automacao:** GitHub Actions a cada 4h (`.github/workflows/atualizar.yml`)
+- **Escopo:** 27 TJs (Brasil inteiro) em `config/tribunais.yaml`; agrupa por municipio
+  via tabela IBGE embutida.
+
+**Passo unico para ativar os dados** — cadastrar a chave publica do DataJud como
+Secret (nunca vai para o site):
+
+```bash
+# via CLI (pede o valor de forma segura, sem eco):
+gh secret set DATAJUD_API_KEY --repo g3healthservice/monitor-judicializacao
+# depois, dispara o primeiro processamento (senao aguarda o cron de 4h):
+gh workflow run atualizar.yml --repo g3healthservice/monitor-judicializacao
+```
+
+Ou pela UI: **Settings -> Secrets and variables -> Actions -> New repository secret**.
+
 ### Dashboard online (padrao Raio-X)
 
 Gera um HTML **autocontido** (dados embutidos, sem back-end) com trava de acesso
