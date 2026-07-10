@@ -41,10 +41,15 @@ def _cmd_run(args):
     async def _run():
         totais = {}
         for tribunal, muns, uf in alvos:
-            totais[tribunal] = await ingerir_tribunal(
-                tribunal, muns, settings=settings,
-                max_paginas=args.max_paginas, uf=uf,
-            )
+            # Resiliencia: falha de um tribunal (ex.: timeout do DataJud) nao
+            # derruba os demais nem a automacao.
+            try:
+                totais[tribunal] = await ingerir_tribunal(
+                    tribunal, muns, settings=settings,
+                    max_paginas=args.max_paginas, uf=uf,
+                )
+            except Exception as exc:  # noqa: BLE001
+                totais[tribunal] = {"erro": f"{type(exc).__name__}: {exc}"}
         return totais
 
     totais = asyncio.run(_run())

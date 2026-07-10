@@ -28,11 +28,17 @@ jobs:
           DATAJUD_API_KEY: ${{ secrets.DATAJUD_API_KEY }}
           SALARIO_MINIMO: "1518.00"
           DATABASE_URL: "sqlite:///monitor.db"
+          # DataJud e lento/instavel: timeout alto, pagina menor.
+          HTTP_TIMEOUT_S: "90"
+          INGEST_PAGE_SIZE: "20"
+          HTTP_MAX_RETRIES: "4"
+          INGEST_LOOKBACK_DIAS: "365"   # janela de demanda recente
         run: |
           python -m src.cli init-db
-          python -m src.cli run            # ingestao incremental (todos os tribunais do YAML)
-          python -m src.cli dashboard      # gera out/dashboard.html
-          cp out/dashboard.html docs/index.html   # GitHub Pages serve a pasta docs/
+          # Ingestao recente dos 27 TJs (bounded p/ caber na janela do Actions).
+          python -m src.cli run --max-paginas 25
+          python -m src.cli dashboard              # gera out/dashboard.html (sem gate)
+          cp out/dashboard.html docs/index.html    # GitHub Pages serve a pasta docs/
 
       - name: Commit e push do dashboard
         run: |
