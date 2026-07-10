@@ -1,0 +1,43 @@
+name: Atualizar Radar de Judicializacao
+
+# Automatiza a captura de novas judicializacoes e republica o dashboard.
+# A chave do DataJud fica APENAS em Secrets (nunca no site publicado).
+on:
+  schedule:
+    - cron: "0 */4 * * *"   # a cada 4 horas (mesma cadencia do Radar de Editais)
+  workflow_dispatch: {}     # permite rodar sob demanda pelo botao "Run workflow"
+
+permissions:
+  contents: write           # para commitar o dashboard atualizado
+
+jobs:
+  atualizar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Instalar dependencias
+        run: pip install -e .
+
+      - name: Ingerir DataJud + gerar dashboard
+        env:
+          DATAJUD_API_KEY: ${{ secrets.DATAJUD_API_KEY }}
+          SALARIO_MINIMO: "1518.00"
+          DATABASE_URL: "sqlite:///monitor.db"
+        run: |
+          python -m src.cli init-db
+          python -m src.cli run            # ingestao incremental (todos os tribunais do YAML)
+          python -m src.cli dashboard      # gera out/dashboard.html
+          cp out/dashboard.html docs/index.html   # GitHub Pages serve a pasta docs/
+
+      - name: Commit e push do dashboard
+        run: |
+          git config user.name  "g3-bot"
+          git config user.email "g3.representante@gmail.com"
+          git add -f docs/index.html monitor.db   # -f: monitor.db mantem o checkpoint entre runs
+          git commit -m "Atualizacao automatica $(date -u '+%Y-%m-%d %H:%M UTC')" || echo "sem mudancas"
+          git push

@@ -1,0 +1,28 @@
+# Escopo geografico monitorado.
+# Comece com um conjunto piloto e escale ate os 5.570 municipios.
+# tribunal: sigla da base DataJud (usada em api_publica_{tribunal}).
+#   Justica Estadual: tjsp, tjrj, tjmg, ...
+#   Justica Federal:  trf1, trf2, trf3, ...
+# codigo_ibge: codigo do municipio (7 digitos).
+
+municipios:
+  - nome: "Sao Paulo"
+    codigo_ibge: "3550308"
+    uf: "SP"
+    tribunal: "tjsp"
+    comarcas:
+      - "Sao Paulo"
+
+  - nome: "Campinas"
+    codigo_ibge: "3509502"
+    uf: "SP"
+    tribunal: "tjsp"
+    comarcas:
+      - "Campinas"
+
+  - nome: "Guarulhos"
+    codigo_ibge: "3518800"
+    uf: "SP"
+    tribunal: "tjsp"
+    comarcas:
+      - "Guarulhos"

@@ -1,0 +1,33 @@
+# Bases de Tribunais de Justica estaduais (DataJud) — Brasil inteiro (27 TJs).
+# Modo "tribunal inteiro": ingere todos os processos de saude do TJ e agrupa por
+# municipio pelo codigoMunicipioIBGE da resposta (tabela IBGE embutida).
+# Comente linhas para reduzir o escopo do primeiro run.
+
+tribunais:
+  - {sigla: tjac, uf: AC, nome: "TJ Acre"}
+  - {sigla: tjal, uf: AL, nome: "TJ Alagoas"}
+  - {sigla: tjam, uf: AM, nome: "TJ Amazonas"}
+  - {sigla: tjap, uf: AP, nome: "TJ Amapa"}
+  - {sigla: tjba, uf: BA, nome: "TJ Bahia"}
+  - {sigla: tjce, uf: CE, nome: "TJ Ceara"}
+  - {sigla: tjdft, uf: DF, nome: "TJ Distrito Federal e Territorios"}
+  - {sigla: tjes, uf: ES, nome: "TJ Espirito Santo"}
+  - {sigla: tjgo, uf: GO, nome: "TJ Goias"}
+  - {sigla: tjma, uf: MA, nome: "TJ Maranhao"}
+  - {sigla: tjmg, uf: MG, nome: "TJ Minas Gerais"}
+  - {sigla: tjms, uf: MS, nome: "TJ Mato Grosso do Sul"}
+  - {sigla: tjmt, uf: MT, nome: "TJ Mato Grosso"}
+  - {sigla: tjpa, uf: PA, nome: "TJ Para"}
+  - {sigla: tjpb, uf: PB, nome: "TJ Paraiba"}
+  - {sigla: tjpe, uf: PE, nome: "TJ Pernambuco"}
+  - {sigla: tjpi, uf: PI, nome: "TJ Piaui"}
+  - {sigla: tjpr, uf: PR, nome: "TJ Parana"}
+  - {sigla: tjrj, uf: RJ, nome: "TJ Rio de Janeiro"}
+  - {sigla: tjrn, uf: RN, nome: "TJ Rio Grande do Norte"}
+  - {sigla: tjro, uf: RO, nome: "TJ Rondonia"}
+  - {sigla: tjrr, uf: RR, nome: "TJ Roraima"}
+  - {sigla: tjrs, uf: RS, nome: "TJ Rio Grande do Sul"}
+  - {sigla: tjsc, uf: SC, nome: "TJ Santa Catarina"}
+  - {sigla: tjse, uf: SE, nome: "TJ Sergipe"}
+  - {sigla: tjsp, uf: SP, nome: "TJ Sao Paulo"}
+  - {sigla: tjto, uf: TO, nome: "TJ Tocantins"}
