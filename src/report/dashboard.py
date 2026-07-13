@@ -50,6 +50,16 @@ _ACCESS_GATE = (
 )
 
 
+def _fmt_numero_cnj(n: Optional[str]) -> str:
+    """Formata o numero CNJ (20 digitos) como NNNNNNN-DD.AAAA.J.TR.OOOO."""
+    if not n:
+        return "—"
+    d = "".join(c for c in str(n) if c.isdigit())
+    if len(d) != 20:
+        return str(n)
+    return f"{d[0:7]}-{d[7:9]}.{d[9:13]}.{d[13:14]}.{d[14:16]}.{d[16:20]}"
+
+
 def _municipios_do_banco(session: Session, ibge_map: Optional[dict]) -> List[Municipio]:
     """Deriva a lista de municipios a partir dos processos ja no banco (modo Brasil inteiro)."""
     from ..config.geo import load_ibge_map
@@ -100,13 +110,19 @@ def build_dataset(
         d = _parse_data(s)
         return d.strftime("%d/%m/%Y") if d else (s or "—")
 
+    def _mes(s):
+        d = _parse_data(s)
+        return d.strftime("%Y-%m") if d else None
+
     muns_payload = []
     total_processos = 0
     total_onc = 0
     classe_total: Counter = Counter()
     ano_total: Counter = Counter()
     categoria_total: Counter = Counter()
+    mes_total: Counter = Counter()
     tempos_all: List[int] = []
+    recentes_all: List[dict] = []
 
     for m in municipios:
         procs: List[Processo] = session.exec(
@@ -123,9 +139,22 @@ def build_dataset(
         classe_total.update(classes)
         ano_total.update(anos)
         categoria_total.update(cats)
+        mes_total.update(mes for mes in (_mes(p.data_ajuizamento) for p in procs) if mes)
         total_processos += len(procs)
         total_onc += onc
         tempos_all.extend(tempos)
+
+        for p in procs:
+            recentes_all.append({
+                "_ord": p.data_ajuizamento or "",
+                "numero": _fmt_numero_cnj(p.numero_processo),
+                "data": _fmt_data(p.data_ajuizamento),
+                "mun": m.nome,
+                "uf": m.uf,
+                "origem": p.orgao_julgador or "—",
+                "categoria": p.categoria or "OUTROS",
+                "onc": p.oncologico,
+            })
 
         muns_payload.append({
             "mun": m.nome,
@@ -153,6 +182,11 @@ def build_dataset(
 
     muns_payload.sort(key=lambda x: x["n_processos"], reverse=True)
     anos_ord = sorted(a for a in ano_total if a.isdigit())
+    meses_ord = sorted(mes_total)
+
+    # Feed de atualizacoes recentes (mais novas primeiro).
+    recentes_all.sort(key=lambda x: x["_ord"], reverse=True)
+    recentes = [{k: v for k, v in r.items() if k != "_ord"} for r in recentes_all[:60]]
 
     return {
         "gerado_em": datetime.now(timezone.utc).astimezone().strftime("%d/%m/%Y %H:%M"),
@@ -168,6 +202,8 @@ def build_dataset(
         "por_categoria": [[CATEGORIA_LABEL.get(k, k), v] for k, v in categoria_total.most_common()],
         "por_classe": classe_total.most_common(7),
         "por_ano": [[a, ano_total[a]] for a in anos_ord],
+        "por_mes": [[mes, mes_total[mes]] for mes in meses_ord],
+        "recentes": recentes,
         "cat_labels": CATEGORIA_LABEL,
         "muns": muns_payload,
     }
@@ -249,7 +285,11 @@ tr:hover td{background:#f6f9fc}
     que a base pública não fornece — em implementação, mediante fonte de custo.</div>
   <div class="panels">
     <div class="panel"><h3>Tipo de demanda (oportunidade)</h3><div id="categorias"></div></div>
-    <div class="panel"><h3>Ações por ano de ajuizamento</h3><div class="yb" id="anos"></div></div>
+    <div class="panel"><h3 id="trendTitle">Ações por mês de ajuizamento</h3><div class="yb" id="anos"></div></div>
+  </div>
+  <div class="panel" style="margin-bottom:14px">
+    <h3>Atualizações recentes <span style="font-weight:400;color:#9db2c4">— últimas ações captadas</span></h3>
+    <div style="overflow-x:auto"><table id="recentes"></table></div>
   </div>
   <div class="toolbar">
     <select id="fuf"><option value="">Todas UFs</option></select>
@@ -286,10 +326,27 @@ function categorias(){
       <div class="qtd">${n}</div></div>`).join('') || '<div style="color:#9db2c4">Sem dados.</div>';
 }
 function anos(){
-  const arr=(D.por_ano||[]).slice(-14), max=Math.max(1,...arr.map(x=>x[1]));
+  // Usa meses (granularidade recente); cai para anos se so houver 1 mes.
+  let arr=(D.por_mes||[]).slice(-14), label=m=>m.slice(5)+'/'+m.slice(2,4);
+  if(arr.length<2){ arr=(D.por_ano||[]).slice(-14); label=a=>a;
+    document.getElementById('trendTitle').textContent='Ações por ano de ajuizamento'; }
+  const max=Math.max(1,...arr.map(x=>x[1]));
   document.getElementById('anos').innerHTML = arr.map(([a,n])=>`
     <div class="col"><div class="colbar" style="height:${Math.round(n/max*90)}px" title="${a}: ${n}"></div>
-      <div class="yr">${a}</div></div>`).join('') || '<div style="color:#9db2c4">Sem dados.</div>';
+      <div class="yr">${label(a)}</div></div>`).join('') || '<div style="color:#9db2c4">Sem dados.</div>';
+}
+function recentes(){
+  const arr=D.recentes||[];
+  const el=document.getElementById('recentes');
+  if(!arr.length){ el.innerHTML='<tbody><tr><td style="color:#9db2c4;padding:12px">Sem dados ainda.</td></tr></tbody>'; return; }
+  el.innerHTML='<thead><tr><th style="text-align:center">Dia</th><th>Número do processo</th>'+
+    '<th>Município</th><th>Origem (vara)</th><th>Tipo de demanda</th></tr></thead><tbody>'+
+    arr.map(r=>`<tr><td style="text-align:center;white-space:nowrap">${r.data}</td>
+      <td style="white-space:nowrap"><code style="font-size:11px">${r.numero}</code></td>
+      <td>${r.mun} <span style="color:#9db2c4">${r.uf}</span></td>
+      <td>${r.origem}</td>
+      <td>${(CATLBL[r.categoria]||r.categoria)}${r.onc?' <span class="tag">ONCO</span>':''}</td></tr>`).join('')+
+    '</tbody>';
 }
 const CATLBL = D.cat_labels||{};
 function filtros(){
@@ -348,7 +405,7 @@ function render(){
     'Volume e tipo de demanda a partir de metadados processuais públicos (DataJud/CNJ). Sem dados pessoais identificáveis (LGPD).<br>'+
     'Tipo de demanda derivado do assunto (TPU/CNJ). *Oncológicas por CID/assunto. © G3 Health Service · build __BUILD__';
 }
-cards();categorias();anos();filtros();render();
+cards();categorias();anos();recentes();filtros();render();
 document.getElementById('fuf').onchange=render;
 document.getElementById('fcat').onchange=render;
 document.getElementById('busca').oninput=render;

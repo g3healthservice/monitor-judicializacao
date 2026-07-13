@@ -78,9 +78,10 @@ def _cmd_dashboard(args):
         # None -> agrupa por todos os municipios presentes no banco (Brasil inteiro).
         payload = build_dataset(session, None)
     destino = gerar_dashboard(payload, out)
+    t = payload["totais"]
     print(f"Dashboard: {destino}")
-    print(f"Municípios: {payload['totais']['n_municipios']} · "
-          f"Dinheiro na mesa: R$ {payload['totais']['valor_total_ressarcivel']:,.2f}")
+    print(f"Municípios: {t['n_municipios']} · Ações: {t['n_processos']} · "
+          f"Oncológicas: {t['n_oncologicos']} · Período: {t['ano_min']}–{t['ano_max']}")
 
 
 def main(argv=None):

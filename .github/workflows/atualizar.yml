@@ -35,8 +35,9 @@ jobs:
           INGEST_LOOKBACK_DIAS: "365"   # janela de demanda recente
         run: |
           python -m src.cli init-db
-          # Ingestao recente dos 27 TJs (bounded p/ caber na janela do Actions).
-          python -m src.cli run --max-paginas 25
+          # Ingestao recente dos 27 TJs. Paginas baixas p/ run rapida e confiavel
+          # (DataJud e lento); a janela recente + upsert idempotente acumula entre runs.
+          python -m src.cli run --max-paginas 6
           python -m src.cli dashboard              # gera out/dashboard.html (sem gate)
           cp out/dashboard.html docs/index.html    # GitHub Pages serve a pasta docs/
 
