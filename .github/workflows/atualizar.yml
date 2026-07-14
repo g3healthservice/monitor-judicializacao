@@ -33,11 +33,15 @@ jobs:
           INGEST_PAGE_SIZE: "20"
           HTTP_MAX_RETRIES: "4"
           INGEST_LOOKBACK_DIAS: "365"   # janela de demanda recente
+          CONASEMS_MAX_POR_RUN: "60"    # coleta oncologia SUS em lotes (resume entre runs)
         run: |
           python -m src.cli init-db
           # Ingestao recente dos 27 TJs. Paginas baixas p/ run rapida e confiavel
           # (DataJud e lento); a janela recente + upsert idempotente acumula entre runs.
           python -m src.cli run --max-paginas 6
+          # Enriquecimento: casos oncologicos SUS por municipio (Paineis CONASEMS/DATASUS)
+          # para o painel "Oncologia SUS x Judicializacao". Falha aqui NAO derruba o build.
+          python -m src.enrich.conasems_onco || echo "conasems_onco: coleta pulada (segue sem cruzamento)"
           python -m src.cli dashboard              # gera out/dashboard.html (sem gate)
           cp out/dashboard.html docs/index.html    # GitHub Pages serve a pasta docs/
 
@@ -45,6 +49,6 @@ jobs:
         run: |
           git config user.name  "g3-bot"
           git config user.email "g3.representante@gmail.com"
-          git add -f docs/index.html monitor.db   # -f: monitor.db mantem o checkpoint entre runs
+          git add -f docs/index.html monitor.db cache/conasems_onco.json   # -f: db/cache mantem checkpoint e resume entre runs
           git commit -m "Atualizacao automatica $(date -u '+%Y-%m-%d %H:%M UTC')" || echo "sem mudancas"
           git push

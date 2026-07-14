@@ -18,6 +18,7 @@ from sqlmodel import Session, select
 
 from ..config.constants import CATEGORIA_LABEL
 from ..config.settings import Municipio
+from ..enrich.conasems_onco import carregar_cache as _onco_cache, ibge6 as _ibge6
 from ..report.aggregate import _parse_data
 from ..store.models import Movimentacao, Processo
 
@@ -114,6 +115,11 @@ def build_dataset(
         d = _parse_data(s)
         return d.strftime("%Y-%m") if d else None
 
+    # Enriquecimento: casos oncologicos SUS por municipio (CONASEMS/DATASUS).
+    _onco = _onco_cache()
+    _onco_mun = (_onco or {}).get("mun", {})
+    onco_cross: List[dict] = []
+
     muns_payload = []
     total_processos = 0
     total_onc = 0
@@ -180,7 +186,27 @@ def build_dataset(
             ],
         })
 
+        # Cruzamento oncologia SUS x judicializacao (so onde ha acao oncologica).
+        sus = _onco_mun.get(_ibge6(m.codigo_ibge) or "")
+        muns_payload[-1]["sus_onco"] = (
+            {"casos_ult": sus["total_ult_ano"], "ano": sus["ult_ano"],
+             "top_cids": sus["top_cids_ult"][:5]} if sus else None
+        )
+        if onc > 0:
+            casos_sus = sus["total_ult_ano"] if sus else None
+            top_cid = sus["top_cids_ult"][0][0] if (sus and sus["top_cids_ult"]) else None
+            # indice de gargalo: acoes judiciais oncologicas por 100 casos SUS registrados.
+            indice = round(onc / casos_sus * 100, 2) if casos_sus else None
+            onco_cross.append({
+                "mun": m.nome, "uf": m.uf, "ibge": m.codigo_ibge,
+                "acoes_onc": onc,
+                "casos_sus": casos_sus, "ano_sus": sus["ult_ano"] if sus else None,
+                "top_cid_sus": top_cid,
+                "indice_judic_por_100": indice,
+            })
+
     muns_payload.sort(key=lambda x: x["n_processos"], reverse=True)
+    onco_cross.sort(key=lambda x: (x["acoes_onc"], x["casos_sus"] or 0), reverse=True)
     anos_ord = sorted(a for a in ano_total if a.isdigit())
     meses_ord = sorted(mes_total)
 
@@ -206,6 +232,12 @@ def build_dataset(
         "recentes": recentes,
         "cat_labels": CATEGORIA_LABEL,
         "muns": muns_payload,
+        "onco_cross": onco_cross,
+        "onco_meta": {
+            "fonte": (_onco or {}).get("meta", {}).get("fonte", "Painéis CONASEMS / DATASUS"),
+            "gerado_em": (_onco or {}).get("meta", {}).get("gerado_em"),
+            "disponivel": bool(_onco_mun),
+        },
     }
 
 
@@ -291,6 +323,11 @@ tr:hover td{background:#f6f9fc}
     <h3>Atualizações recentes <span style="font-weight:400;color:#9db2c4">— últimas ações captadas</span></h3>
     <div style="overflow-x:auto"><table id="recentes"></table></div>
   </div>
+  <div class="panel" id="oncoPanel" style="margin-bottom:14px;display:none">
+    <h3>Oncologia SUS × Judicialização <span style="font-weight:400;color:#9db2c4">— demanda oncológica no SUS vs. ações judiciais oncológicas, por município</span></h3>
+    <div style="overflow-x:auto"><table id="oncoCross"></table></div>
+    <div id="oncoFoot" style="font-size:11px;color:#7a8794;margin-top:8px;line-height:1.6"></div>
+  </div>
   <div class="toolbar">
     <select id="fuf"><option value="">Todas UFs</option></select>
     <select id="fcat"><option value="">Todos os tipos de demanda</option></select>
@@ -349,6 +386,30 @@ function recentes(){
     '</tbody>';
 }
 const CATLBL = D.cat_labels||{};
+function oncoCross(){
+  const arr=D.onco_cross||[], meta=D.onco_meta||{};
+  const panel=document.getElementById('oncoPanel');
+  if(!arr.length){ panel.style.display='none'; return; }
+  panel.style.display='block';
+  document.getElementById('oncoCross').innerHTML='<thead><tr><th>Município</th><th>UF</th>'+
+    '<th style="text-align:center">Ações judiciais oncológicas</th>'+
+    '<th style="text-align:center">Casos oncológicos SUS</th>'+
+    '<th>CID mais frequente (SUS)</th>'+
+    '<th style="text-align:center" title="Ações judiciais oncológicas por 100 casos oncológicos registrados no SUS">Judic./100 casos</th>'+
+    '</tr></thead><tbody>'+
+    arr.map(r=>`<tr><td><b>${r.mun}</b></td><td>${r.uf}</td>
+      <td style="text-align:center"><span class="tag">${num(r.acoes_onc)}</span></td>
+      <td style="text-align:center">${r.casos_sus==null?'<span style="color:#9db2c4">s/ dado</span>':num(r.casos_sus)+(r.ano_sus?' <span style="color:#9db2c4">('+r.ano_sus+')</span>':'')}</td>
+      <td style="font-size:11px">${r.top_cid_sus||'—'}</td>
+      <td style="text-align:center">${r.indice_judic_por_100==null?'—':Number(r.indice_judic_por_100).toLocaleString('pt-BR')}</td></tr>`).join('')+
+    '</tbody>';
+  const dt=meta.gerado_em?(' · coletado '+String(meta.gerado_em).slice(0,10)):'';
+  document.getElementById('oncoFoot').innerHTML =
+    'Casos oncológicos no SUS por município: <b>'+(meta.fonte||'Painéis CONASEMS / DATASUS')+'</b>'+dt+'. '+
+    'Cruzamento pelo código IBGE. <b>Índice alto</b> = muita judicialização frente ao volume SUS (gargalo de acesso — mercado prioritário para a frente 1); '+
+    '<b>índice baixo com muitos casos</b> = grande base oncológica ainda pouco judicializada. '+
+    'Não estima ressarcimento do Tema 1.234 — isso depende do custo do fármaco, ausente na base pública do DataJud.';
+}
 function filtros(){
   const s=document.getElementById('fuf');
   [...new Set(D.muns.map(m=>m.uf))].filter(Boolean).sort().forEach(u=>{
@@ -405,7 +466,7 @@ function render(){
     'Volume e tipo de demanda a partir de metadados processuais públicos (DataJud/CNJ). Sem dados pessoais identificáveis (LGPD).<br>'+
     'Tipo de demanda derivado do assunto (TPU/CNJ). *Oncológicas por CID/assunto. © G3 Health Service · build __BUILD__';
 }
-cards();categorias();anos();recentes();filtros();render();
+cards();categorias();anos();recentes();oncoCross();filtros();render();
 document.getElementById('fuf').onchange=render;
 document.getElementById('fcat').onchange=render;
 document.getElementById('busca').oninput=render;
