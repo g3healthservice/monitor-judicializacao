@@ -51,6 +51,9 @@ def main(argv=None) -> int:
     al.add_argument("--previa", action="store_true", help="mostra o que seria enviado, sem enviar nem marcar")
     al.add_argument("--teste", action="store_true", help="envia uma mensagem de teste pelos canais configurados")
 
+    pa = sub.add_parser("painel", help="gera o painel HTML publico (so dados do PNCP)")
+    pa.add_argument("--saida", default="docs/licitacoes/index.html")
+
     sub.add_parser("reavaliar", help="recalcula pontuacao apos mudar pesos/limiar (sem rede)")
 
     l = sub.add_parser("candidatas", help="lista as demandas candidatas e grava CSV/Markdown")
@@ -113,6 +116,10 @@ def main(argv=None) -> int:
         print(f"Gravado: {simulador.gravar_csv(lista, cfg.saida_dir)}")
     elif a.cmd == "alertas":
         return _alertas(cfg, con, a)
+    elif a.cmd == "painel":
+        from pathlib import Path
+        from . import painel
+        print(f"Painel gravado em {painel.gravar(con, regras, Path(a.saida))}")
     elif a.cmd == "reavaliar":
         print(f"{relatorio.reavaliar(con, regras)} contratacoes reavaliadas")
     elif a.cmd == "candidatas":

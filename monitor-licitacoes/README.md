@@ -172,6 +172,14 @@ https://myaccount.google.com/apppasswords) e `ALERT_EMAIL_TO` (quem recebe). Sem
 ficam pendentes no banco e saem no primeiro envio depois da configuração (prazos já
 vencidos são descartados). Veja [`.env.example`](.env.example).
 
+## Painel
+
+O workflow publica todo dia um painel em
+https://g3healthservice.github.io/monitor-judicializacao/licitacoes/ com prazos abertos,
+candidatas, trechos do edital, situação por item, vencedores e mudanças dos últimos 30
+dias. A página é pública e por isso traz **só dados do PNCP**: preços indianos, custos,
+margens, cenários e observações de `cotacoes.csv` ficam de fora.
+
 ## Uso
 
 ```bash
@@ -193,6 +201,7 @@ python -m licitacoes.cli viabilidade --abertas         # só itens com prazo abe
 python -m licitacoes.cli ficha 709 1                   # ficha completa de um item
 python -m licitacoes.cli simular                       # etapa 4: cenários + CSV em out/
 python -m licitacoes.cli simular 709 1                 # cenários de um item
+python -m licitacoes.cli painel                        # painel HTML público em docs/licitacoes/
 python -m licitacoes.cli alertas --previa              # o que seria enviado, sem enviar
 python -m licitacoes.cli alertas --teste               # mensagem de teste pelos canais
 python -m licitacoes.cli alertas                       # gera e envia os alertas novos
