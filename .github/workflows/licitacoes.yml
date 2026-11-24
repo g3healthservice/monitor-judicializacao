@@ -83,11 +83,13 @@ jobs:
       - name: Enviar alertas
         env:
           LIC_DB_PATH: monitor.db
-          SMTP_HOST: ${{ secrets.SMTP_HOST }}
-          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          # Gmail por padrao; um Secret com o mesmo nome substitui o valor.
+          SMTP_HOST: ${{ secrets.SMTP_HOST || 'smtp.gmail.com' }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT || '587' }}
+          # Secrets obrigatorios para o e-mail: SMTP_USER, SMTP_PASSWORD (senha de app) e ALERT_EMAIL_TO.
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
-          SMTP_FROM: ${{ secrets.SMTP_FROM }}
+          SMTP_FROM: ${{ secrets.SMTP_FROM }}         # opcional: vazio = SMTP_USER
           ALERT_EMAIL_TO: ${{ secrets.ALERT_EMAIL_TO }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}

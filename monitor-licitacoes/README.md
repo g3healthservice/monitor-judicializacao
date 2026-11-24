@@ -165,8 +165,10 @@ e traz a tabela de cenários dos itens cotados citados.
 
 **Canais.** E-mail pelas mesmas variáveis do monitor de judicialização (`SMTP_HOST`,
 `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM`, `ALERT_EMAIL_TO`) e Telegram
-opcional (`TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`). No GitHub, elas ficam em
-*Settings → Secrets and variables → Actions*. Sem nenhum canal configurado, os alertas
+opcional (`TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`). No GitHub, o workflow já usa o
+Gmail (`smtp.gmail.com`, porta 587) e só precisa de três Secrets em *Settings → Secrets
+and variables → Actions*: `SMTP_USER` (a conta Gmail), `SMTP_PASSWORD` (a senha de app de
+https://myaccount.google.com/apppasswords) e `ALERT_EMAIL_TO` (quem recebe). Sem nenhum canal configurado, os alertas
 ficam pendentes no banco e saem no primeiro envio depois da configuração (prazos já
 vencidos são descartados). Veja [`.env.example`](.env.example).
 
