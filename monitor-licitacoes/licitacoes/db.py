@@ -148,6 +148,21 @@ CREATE TABLE IF NOT EXISTS lic_evento (
     detectado_em        TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS ix_lic_evento_data ON lic_evento (detectado_em);
+
+-- Etapa 4: alertas montados e se ja foram enviados (evita aviso repetido).
+CREATE TABLE IF NOT EXISTS lic_alerta (
+    chave               TEXT PRIMARY KEY,   -- tipo + contratacao + item + fato
+    tipo                TEXT NOT NULL,      -- edital_novo | sem_sucesso | situacao | prazo | referencia
+    numero_controle     TEXT,
+    numero_item         INTEGER,
+    titulo              TEXT,
+    detalhe             TEXT,
+    url                 TEXT,
+    prazo               TEXT,               -- so para tipo prazo: descartado se vencer antes do envio
+    criado_em           TEXT NOT NULL,
+    enviado_em          TEXT,
+    canais              TEXT
+);
 """
 
 # Colunas acrescentadas depois da primeira versao (o banco pode ja existir).

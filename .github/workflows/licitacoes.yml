@@ -1,8 +1,8 @@
 name: Monitor de Licitacoes (sem registro)
 
-# Agente de licitacoes, etapas 1 a 3: coleta diaria no PNCP (UASG 250005 - DLOG/MS),
+# Agente de licitacoes, etapas 1 a 4: coleta diaria no PNCP (UASG 250005 - DLOG/MS),
 # leitura de edital/TR, marcacao das demandas que admitem medicamento sem registro
-# acompanhamento do resultado de cada item e nota de viabilidade.
+# acompanhamento do resultado de cada item, nota de viabilidade, cenarios e alertas.
 # Grava no mesmo monitor.db do monitor de judicializacao (tabelas lic_*).
 on:
   schedule:
@@ -58,12 +58,17 @@ jobs:
           python -m licitacoes.cli resultados > monitor-licitacoes/saida/licitacoes_resultados.txt
           # Etapa 3: ficha e nota de viabilidade (premissas.yaml + cotacoes.csv).
           python -m licitacoes.cli viabilidade > monitor-licitacoes/saida/licitacoes_viabilidade.txt
+          # Etapa 4a: cenarios (cambio, imposto, frete, volume) dos itens cotados.
+          python -m licitacoes.cli simular > monitor-licitacoes/saida/licitacoes_cenarios.txt
           python -m licitacoes.cli eventos --desde "$(date -u -d '-1 day' '+%Y-%m-%d')" \
             > monitor-licitacoes/saida/licitacoes_eventos.txt
           {
             cat monitor-licitacoes/saida/licitacoes_candidatas.md
             echo; echo "## Mudanças nas últimas 24 horas"; echo; echo '```'
             cat monitor-licitacoes/saida/licitacoes_eventos.txt
+            echo '```'
+            echo; echo "## Cenários dos itens cotados"; echo; echo '```'
+            cat monitor-licitacoes/saida/licitacoes_cenarios.txt
             echo '```'
             echo; echo "## Viabilidade por item"; echo; echo '```'
             cat monitor-licitacoes/saida/licitacoes_viabilidade.txt
@@ -72,6 +77,24 @@ jobs:
             cat monitor-licitacoes/saida/licitacoes_resultados.txt
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
+
+      # Etapa 4b: um unico e-mail (e Telegram, se configurado) com os alertas novos.
+      # Sem os Secrets, nada e enviado e os alertas ficam pendentes no banco.
+      - name: Enviar alertas
+        env:
+          LIC_DB_PATH: monitor.db
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          SMTP_FROM: ${{ secrets.SMTP_FROM }}
+          ALERT_EMAIL_TO: ${{ secrets.ALERT_EMAIL_TO }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          python -m licitacoes.cli alertas | tee monitor-licitacoes/saida/licitacoes_alertas.txt
+          { echo; echo "## Alertas desta execução"; echo; echo '```'
+            cat monitor-licitacoes/saida/licitacoes_alertas.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Commit do banco e da lista de candidatas
         run: |

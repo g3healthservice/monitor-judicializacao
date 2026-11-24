@@ -27,3 +27,28 @@ viabilidade:
   margem_cheia: 0.30
   # Prazo em dias: nota 0 com prazo vencido, 100 a partir de prazo_cheio.
   prazo_cheio_dias: 15
+
+# Cenários do simulador (etapa 4). Cada cenário muda só o que lista; o resto
+# vem de "custo" acima. cambio_fator multiplica o câmbio.
+cenarios:
+  base:
+    nome: Base
+  cambio:
+    nome: Câmbio +10%
+    cambio_fator: 1.10
+  imposto_10:
+    nome: Imposto de importação 10%
+    imposto_importacao: 0.10
+  imposto_18:
+    nome: Imposto de importação 18%
+    imposto_importacao: 0.18
+  logistica:
+    nome: Frete refrigerado 12%
+    frete_seguro: 0.12
+  volume:
+    nome: Desconto de 5% por volume
+    desconto_volume: 0.05
+
+# Alertas (etapa 4).
+alertas:
+  prazo_horas: 48     # avisa quando o fim das propostas ou o prazo informado está a menos disto

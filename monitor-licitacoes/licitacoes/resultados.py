@@ -97,7 +97,8 @@ class Acompanhamento:
 
     def estado_anterior(self, nc: str) -> Dict[int, Dict]:
         return {r["numero_item"]: dict(r) for r in self.con.execute(
-            "SELECT numero_item, situacao_id, situacao, resultado_versao, data_atualizacao "
+            "SELECT numero_item, situacao_id, situacao, resultado_versao, data_atualizacao, "
+            "valor_unitario_estimado "
             "FROM lic_item WHERE numero_controle = ?", (nc,))}
 
     def atualizar(self, nc: str, cnpj: str, ano: int, seq: int, itens: List[Dict],
@@ -120,6 +121,11 @@ class Acompanhamento:
                     "WHERE numero_controle=? AND numero_item=?",
                     (sid, principio(i.get("descricao")), fase(sid, encerramento), nc, n))
                 velho = antes.get(n)
+                ref_velha, ref_nova = (velho or {}).get("valor_unitario_estimado"), i.get("valorUnitarioEstimado")
+                if velho and ref_velha and ref_nova and abs(ref_velha - ref_nova) > 0.005:
+                    self._evento(nc, n, "referencia", f"{ref_velha:.2f}", f"{ref_nova:.2f}",
+                                 "valor unitário estimado mudou no PNCP", ts)
+                    cont["eventos"] += 1
                 if velho and velho.get("situacao_id") is not None and velho["situacao_id"] != sid:
                     self._evento(nc, n, "situacao", velho.get("situacao"),
                                  i.get("situacaoCompraItemNome") or SITUACOES.get(sid), None, ts)

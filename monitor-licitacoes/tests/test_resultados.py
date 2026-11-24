@@ -7,7 +7,7 @@ import pytest
 from licitacoes import db, relatorio
 from licitacoes.coleta import Coletor
 from licitacoes.config import Config
-from licitacoes.resultados import fase, principio
+from licitacoes.resultados import SITUACOES, fase, principio
 from licitacoes.sinais import carregar_regras
 
 from .test_coleta import REG_709, ClienteFalso
@@ -68,7 +68,7 @@ class ClienteComResultado(ClienteFalso):
             {"numeroItem": 1, "descricao": "Tolvaptana concentração: 15", "quantidade": 20340,
              "unidadeMedida": "Comprimido", "ncmNbsCodigo": "30049099",
              "situacaoCompraItem": self.situacao_709,
-             "situacaoCompraItemNome": "Homologado" if homolog else "Em andamento",
+             "situacaoCompraItemNome": SITUACOES[self.situacao_709],
              "temResultado": homolog, "dataAtualizacao": "2026-10-20" if homolog else "2026-09-28"},
             {"numeroItem": 2, "descricao": "Quinidina Sulfato dosagem: 200", "quantidade": 12150,
              "unidadeMedida": "Comprimido", "ncmNbsCodigo": "30049099", "situacaoCompraItem": 1,

@@ -1,7 +1,8 @@
 # Monitor de licitações de medicamentos sem registro
 
 Projeto separado do monitor de judicialização. Implementa as **etapas 1 (monitor e
-filtro), 2 (resultados por item) e 3 (ficha e viabilidade)** da especificação "Especificação do agente de
+filtro), 2 (resultados por item), 3 (ficha e viabilidade) e 4 (simulador e
+alertas)** da especificação "Especificação do agente de
 monitoramento de licitações de medicamentos sem registro".
 
 Todo dia ele:
@@ -102,7 +103,7 @@ cabe na referência. A fórmula é a da planilha "Prévia de custos: importaçã
 
 ```
 custo   = FOB × câmbio × (1 + frete) × (1 + II + desembaraço) × (1 − desconto)
-FOB máx = referência / (câmbio × (1 + frete) × (1 + II + desembaraço))
+FOB máx = referência / (câmbio × (1 + frete) × (1 + II + desembaraço) × (1 − desconto))
 ```
 
 As premissas (câmbio 0,055 R$/₹, frete 6%, II 0%, desembaraço 2%, desconto 0%) e os
@@ -130,6 +131,45 @@ Critério sem dado conta como neutro (50), e a ficha mostra a **cobertura**: qua
 peso total veio de dado real. A lista sai ordenada, com o motivo de cada nota. A
 decisão de participar continua sendo sua.
 
+## Simulador de cenários (etapa 4)
+
+`simular` calcula, para cada item com preço indiano em `cotacoes.csv`, o custo
+desembarcado, a margem e o FOB máximo em cada cenário de `premissas.yaml`, e marca
+os cenários em que o custo fica acima da referência:
+
+| Cenário | O que muda |
+|---|---|
+| Base | premissas atuais |
+| Câmbio +10% | câmbio × 1,10 |
+| Imposto de importação 10% / 18% | II = 10% ou 18% |
+| Frete refrigerado 12% | frete + seguro = 12% |
+| Desconto de 5% por volume | desconto do fabricante = 5% |
+
+Os cenários são editáveis: acrescente um bloco em `cenarios:` com o que muda.
+
+## Alertas (etapa 4)
+
+A cada execução, `alertas` junta numa única mensagem o que é novo desde a anterior:
+
+1. **edital novo** com sinais de produto sem registro (candidata com propostas
+   abertas ou publicada nos últimos 7 dias);
+2. **item acompanhado fracassado, deserto ou cancelado**, e as demais mudanças de
+   situação, vencedor e ata;
+3. **prazo a menos de 48 horas**: fim das propostas, ou o `prazo_manual` de
+   `cotacoes.csv` (diligência);
+4. **mudança no preço de referência** de um item no PNCP.
+
+"Acompanhados" são as contratações candidatas e as que têm item em `cotacoes.csv`.
+Cada alerta sai uma vez só. O e-mail mostra prazos e itens sem sucesso em vermelho
+e traz a tabela de cenários dos itens cotados citados.
+
+**Canais.** E-mail pelas mesmas variáveis do monitor de judicialização (`SMTP_HOST`,
+`SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM`, `ALERT_EMAIL_TO`) e Telegram
+opcional (`TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`). No GitHub, elas ficam em
+*Settings → Secrets and variables → Actions*. Sem nenhum canal configurado, os alertas
+ficam pendentes no banco e saem no primeiro envio depois da configuração (prazos já
+vencidos são descartados). Veja [`.env.example`](.env.example).
+
 ## Uso
 
 ```bash
@@ -149,6 +189,11 @@ python -m licitacoes.cli eventos --desde 2026-11-01    # mudanças detectadas
 python -m licitacoes.cli viabilidade                   # etapa 3: lista ordenada + CSV em out/
 python -m licitacoes.cli viabilidade --abertas         # só itens com prazo aberto
 python -m licitacoes.cli ficha 709 1                   # ficha completa de um item
+python -m licitacoes.cli simular                       # etapa 4: cenários + CSV em out/
+python -m licitacoes.cli simular 709 1                 # cenários de um item
+python -m licitacoes.cli alertas --previa              # o que seria enviado, sem enviar
+python -m licitacoes.cli alertas --teste               # mensagem de teste pelos canais
+python -m licitacoes.cli alertas                       # gera e envia os alertas novos
 python -m licitacoes.cli reavaliar                     # após mudar sinais.yaml (sem rede)
 ```
 
@@ -174,7 +219,3 @@ cd monitor-licitacoes && python -m pytest -q
 
 Os testes usam o texto real do Edital PE SRP 90114/2026 (item 9.27) e simulam o
 PNCP, então rodam sem rede.
-
-## Próximas etapas
-
-4. Simulador de cenários e alertas.

@@ -3,7 +3,7 @@
 Custo desembarcado (mesma formula da planilha de comparativo):
 
     custo  = FOB * cambio * (1 + frete) * (1 + II + desembaraco) * (1 - desconto)
-    FOBmax = referencia / (cambio * (1 + frete) * (1 + II + desembaraco))
+    FOBmax = referencia / (cambio * (1 + frete) * (1 + II + desembaraco) * (1 - desconto))
 
 A nota soma cinco criterios com pesos ajustaveis (premissas.yaml). Criterio sem
 dado conta como neutro (50); a cobertura diz quanto do peso total foi de fato
@@ -59,7 +59,9 @@ class Premissas:
                 * (1 + self.imposto + self.desembaraco) * (1 - self.desconto))
 
     def fob_maximo_inr(self, referencia_brl: float) -> float:
-        return referencia_brl / (self.cambio * (1 + self.frete) * (1 + self.imposto + self.desembaraco))
+        """Preco de lista indiano que ainda cabe na referencia (inverso exato de custo())."""
+        return referencia_brl / (self.cambio * (1 + self.frete) * (1 + self.imposto + self.desembaraco)
+                                 * (1 - self.desconto))
 
 
 def carregar_premissas(caminho: Path = PREMISSAS_PADRAO) -> Premissas:
