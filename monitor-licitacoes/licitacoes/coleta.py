@@ -65,27 +65,42 @@ def eh_medicamento(itens: List[Dict], objeto: str) -> bool:
 _LIMITE_PDF = 80 * 2**20
 
 
-def _pdfs_de(conteudo: bytes) -> List[Tuple[str, bytes]]:
-    """PDFs contidos no arquivo baixado: o proprio PDF ou os PDFs de um ZIP/RAR/7z."""
+_COMPACTADOS = (".zip", ".rar", ".7z")
+
+
+def _pdfs_de(conteudo: bytes, nivel: int = 0) -> List[Tuple[str, bytes]]:
+    """PDFs contidos no arquivo baixado: o proprio PDF ou os PDFs de um ZIP/RAR/7z.
+
+    Abre compactados dentro de compactados (ex.: ZIP com RAR dentro, comum na
+    DLOG) ate dois niveis.
+    """
     if conteudo[:5] == b"%PDF-":
         return [("", conteudo)]
+    if nivel > 2:
+        return []
+    membros: List[Tuple[str, bytes]] = []
     if conteudo[:2] == b"PK":
         try:
             with zipfile.ZipFile(io.BytesIO(conteudo)) as z:
-                return [
-                    (n, z.read(n))
-                    for n in z.namelist()
-                    if n.lower().endswith(".pdf") and z.getinfo(n).file_size < _LIMITE_PDF
+                membros = [
+                    (n, z.read(n)) for n in z.namelist()
+                    if n.lower().endswith((".pdf",) + _COMPACTADOS) and z.getinfo(n).file_size < _LIMITE_PDF
                 ]
         except zipfile.BadZipFile:
             return []
-    if conteudo[:4] == b"Rar!" or conteudo[:6] == b"7z\xbc\xaf\x27\x1c":
-        return _pdfs_bsdtar(conteudo)
-    return []
+    elif conteudo[:4] == b"Rar!" or conteudo[:6] == b"7z\xbc\xaf\x27\x1c":
+        membros = _membros_bsdtar(conteudo)
+    saida = []
+    for nome, dados in membros:
+        if nome.lower().endswith(".pdf"):
+            saida.append((nome, dados))
+        else:
+            saida += [(f"{nome}/{n}", d) for n, d in _pdfs_de(dados, nivel + 1)]
+    return saida
 
 
-def _pdfs_bsdtar(conteudo: bytes) -> List[Tuple[str, bytes]]:
-    """Extrai PDFs de RAR/7z com o bsdtar (pacote libarchive-tools)."""
+def _membros_bsdtar(conteudo: bytes) -> List[Tuple[str, bytes]]:
+    """Extrai PDFs e compactados internos de RAR/7z com o bsdtar (libarchive-tools)."""
     if not shutil.which("bsdtar"):
         raise ValueError("arquivo RAR/7z: instale o bsdtar (libarchive-tools) para ler")
     with tempfile.TemporaryDirectory() as d:
@@ -101,7 +116,8 @@ def _pdfs_bsdtar(conteudo: bytes) -> List[Tuple[str, bytes]]:
         return [
             (str(p.relative_to(destino)), p.read_bytes())
             for p in sorted(destino.rglob("*"))
-            if p.is_file() and p.suffix.lower() == ".pdf" and p.stat().st_size < _LIMITE_PDF
+            if p.is_file() and p.suffix.lower() in (".pdf",) + _COMPACTADOS
+            and p.stat().st_size < _LIMITE_PDF
         ]
 
 
@@ -153,7 +169,7 @@ class Coletor:
         self._gravar_compra(reg)
         if atual and atual["avaliada_versao"] == versao and not reprocessar:
             return
-        self.processar(nc, reg, era_candidata=bool(atual and atual["candidata"]))
+        self.processar(nc, reg, era_candidata=bool(atual and atual["candidata"]), forcar=reprocessar)
 
     def _gravar_compra(self, reg: Dict) -> None:
         un = reg.get("unidadeOrgao") or {}
@@ -190,7 +206,7 @@ class Coletor:
                 ),
             )
 
-    def processar(self, nc: str, reg: Dict, era_candidata: bool = False) -> None:
+    def processar(self, nc: str, reg: Dict, era_candidata: bool = False, forcar: bool = False) -> None:
         self.stats["processadas"] += 1
         cnpj = (reg.get("orgaoEntidade") or {}).get("cnpj")
         ano, seq = reg["anoCompra"], reg["sequencialCompra"]
@@ -207,7 +223,7 @@ class Coletor:
             self._sinais_documento(nc, 0, objeto, None, f"{url_publica(cnpj, ano, seq)} (objeto)", ts)
             for arq in self.cliente.arquivos(cnpj, ano, seq):
                 titulos.append(arq.get("titulo") or "")
-                self._ler_arquivo(nc, arq, ts)
+                self._ler_arquivo(nc, arq, ts, forcar)
 
         ids = [r["sinal_id"] for r in self.con.execute(
             "SELECT DISTINCT sinal_id FROM lic_sinal WHERE numero_controle = ?", (nc,))]
@@ -250,14 +266,18 @@ class Coletor:
                      int(bool(i.get("temResultado"))), i.get("dataAtualizacao"), ts),
                 )
 
-    def _ler_arquivo(self, nc: str, arq: Dict, ts: str) -> None:
+    def _ler_arquivo(self, nc: str, arq: Dict, ts: str, forcar: bool = False) -> None:
         seq_doc = int(arq["sequencialDocumento"])
         url = arq.get("url") or arq.get("uri")
         ja = self.con.execute(
-            "SELECT lido_em, data_publicacao, erro FROM lic_arquivo WHERE numero_controle=? AND sequencial_documento=?",
+            "SELECT lido_em, data_publicacao, erro, caracteres FROM lic_arquivo WHERE numero_controle=? AND sequencial_documento=?",
             (nc, seq_doc)).fetchone()
-        if ja and ja["lido_em"] and not ja["erro"] and ja["data_publicacao"] == arq.get("dataPublicacaoPncp"):
-            return  # mesmo documento ja lido
+        # Mesmo documento ja lido por inteiro: nao baixa de novo. Documento com
+        # pouco texto e relido (pode ter sido um compactado que o leitor nao abria).
+        if (not forcar and ja and ja["lido_em"] and not ja["erro"]
+                and (ja["caracteres"] or 0) >= 2000
+                and ja["data_publicacao"] == arq.get("dataPublicacaoPncp")):
+            return
         if not arq.get("statusAtivo", True):
             self._gravar_arquivo(nc, arq, None, 0, 0, ts, "documento inativo")
             return

@@ -96,3 +96,24 @@ def test_coleta_marca_709_e_ignora_nao_medicamento(tmp_path):
     arquivos = relatorio.gravar(relatorio.candidatas(con), REGRAS, cfg.saida_dir)
     assert "90114/2026" in arquivos["md"].read_text(encoding="utf-8")
     assert "sem registro na ANVISA" in arquivos["csv"].read_text(encoding="utf-8-sig")
+
+
+def test_zip_com_rar_dentro(tmp_path):
+    """ZIP com RAR dentro (formato comum na DLOG) e lido ate os PDFs."""
+    import io, shutil, subprocess, zipfile
+    import pytest
+    from licitacoes.coleta import _pdfs_de
+    if not shutil.which("bsdtar"):
+        pytest.skip("bsdtar ausente")
+    pasta = tmp_path / "Completo"
+    pasta.mkdir()
+    (pasta / "Edital.pdf").write_bytes(_pdf(EDITAL_90114))
+    rar = tmp_path / "Completo.7z"  # bsdtar nao grava RAR; 7z usa o mesmo caminho de leitura
+    subprocess.run(["bsdtar", "-a", "-cf", str(rar), "-C", str(tmp_path), "Completo"], check=True)
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w") as z:
+        z.writestr("Aviso.pdf", _pdf("Aviso curto"))
+        z.writestr("Edital BUPROPIONA.7z", rar.read_bytes())
+    nomes = [n for n, _ in _pdfs_de(buf.getvalue())]
+    assert "Aviso.pdf" in nomes
+    assert any(n.endswith("Completo/Edital.pdf") for n in nomes)
