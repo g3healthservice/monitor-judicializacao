@@ -1,0 +1,63 @@
+name: Monitor de Licitacoes (sem registro)
+
+# Etapa 1 do agente de licitacoes: coleta diaria no PNCP (UASG 250005 - DLOG/MS),
+# leitura de edital/TR e marcacao das demandas que admitem medicamento sem registro.
+# Grava no mesmo monitor.db do monitor de judicializacao (tabelas lic_*).
+on:
+  schedule:
+    - cron: "17 9 * * *"     # todo dia, 06:17 em Brasilia
+  workflow_dispatch:
+    inputs:
+      desde:
+        description: "Reprocessar desde (AAAA-MM-DD). Vazio = incremental."
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+# Mesmo grupo do workflow de judicializacao: os dois gravam monitor.db e nunca
+# rodam ao mesmo tempo (evita conflito no commit do banco).
+concurrency:
+  group: monitor-db
+  cancel-in-progress: false
+
+jobs:
+  licitacoes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Instalar dependencias
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q poppler-utils libarchive-tools   # pdftotext e leitura de .rar
+          pip install ./monitor-licitacoes
+
+      - name: Coletar e avaliar
+        env:
+          LIC_DB_PATH: monitor.db
+          LIC_UASGS: "250005"
+          LIC_MODALIDADES: "6"
+          LIC_LOOKBACK_DIAS: "330"   # primeira execucao: 2026 inteiro
+          LIC_SAIDA_DIR: monitor-licitacoes/saida
+        run: |
+          if [ -n "${{ github.event.inputs.desde }}" ]; then
+            python -m licitacoes.cli coletar --desde "${{ github.event.inputs.desde }}" --por publicacao --reprocessar
+          else
+            python -m licitacoes.cli coletar
+          fi
+          python -m licitacoes.cli candidatas > /dev/null
+          cat monitor-licitacoes/saida/licitacoes_candidatas.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Commit do banco e da lista de candidatas
+        run: |
+          git config user.name  "g3-bot"
+          git config user.email "g3.representante@gmail.com"
+          git add -f monitor.db monitor-licitacoes/saida/
+          git commit -m "Licitacoes: atualizacao automatica $(date -u '+%Y-%m-%d %H:%M UTC')" || echo "sem mudancas"
+          git push

@@ -1,0 +1,26 @@
+[project]
+name = "monitor-licitacoes"
+version = "0.1.0"
+description = "Agente de monitoramento de licitacoes federais de medicamentos que admitem produto sem registro na Anvisa"
+requires-python = ">=3.9"
+# Dependencias minimas: HTTP e SQLite vem da biblioteca padrao.
+# pdftotext (poppler-utils), quando instalado, e usado no lugar do pypdf.
+dependencies = [
+    "PyYAML>=6.0",
+    "pypdf>=4.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+licitacoes = "licitacoes.cli:main"
+
+[tool.setuptools]
+packages = ["licitacoes"]
+
+[tool.setuptools.package-data]
+licitacoes = ["sinais.yaml"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
