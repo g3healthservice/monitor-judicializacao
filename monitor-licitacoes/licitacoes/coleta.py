@@ -139,21 +139,43 @@ class Coletor:
         ate = ate or date.today()
         for uasg in self.cfg.uasgs:
             for mod in self.cfg.modalidades:
-                chave = f"{por}:{self.cfg.cnpj_orgao}:{uasg}:{mod}"
+                chave = f"atualizacao:{self.cfg.cnpj_orgao}:{uasg}:{mod}"
+                modo = por
+                if desde is None and db.ler_checkpoint(self.con, chave) is None:
+                    # Primeira carga: a consulta por atualizacao do PNCP nao responde
+                    # (erro 500 por tempo) em periodos antigos; por publicacao responde.
+                    modo = "publicacao"
                 ini = desde or self._inicio(chave, ate)
-                log.info("Coletando UASG %s modalidade %s de %s a %s (%s)", uasg, mod, ini, ate, por)
-                for janela_ini, janela_fim in _janelas(ini, ate, dias=30):
-                    for reg in self.cliente.contratacoes(janela_ini, janela_fim, mod, uasg, por=por):
-                        self.stats["lidas"] += 1
-                        try:
-                            self._tratar(reg, reprocessar)
-                        except ErroPNCP as e:
-                            self.stats["erros"] += 1
-                            log.error("Falha em %s: %s", reg.get("numeroControlePNCP"), e)
-                if desde is None:
+                log.info("Coletando UASG %s modalidade %s de %s a %s (%s)", uasg, mod, ini, ate, modo)
+                falhou = False
+                for janela_ini, janela_fim in _janelas(ini, ate, dias=30 if modo == "publicacao" else 7):
+                    if not self._janela(janela_ini, janela_fim, mod, uasg, modo, reprocessar):
+                        falhou = True
+                if desde is None and not falhou:
                     with db.transacao(self.con):
                         db.gravar_checkpoint(self.con, chave, ate.isoformat())
+                elif falhou:
+                    log.error("Periodo com falha no PNCP: o checkpoint nao avanca e a proxima "
+                              "execucao tenta de novo")
         return self.stats
+
+    def _janela(self, ini: date, fim: date, mod: str, uasg: str, modo: str, reprocessar: bool) -> bool:
+        """Processa uma janela. Se a consulta por atualizacao falhar, tenta por
+        publicacao. Retorna False se a janela nao pode ser lida (a coleta segue)."""
+        for tentativa in ([modo, "publicacao"] if modo == "atualizacao" else [modo]):
+            try:
+                for reg in self.cliente.contratacoes(ini, fim, mod, uasg, por=tentativa):
+                    self.stats["lidas"] += 1
+                    try:
+                        self._tratar(reg, reprocessar)
+                    except ErroPNCP as e:
+                        self.stats["erros"] += 1
+                        log.error("Falha em %s: %s", reg.get("numeroControlePNCP"), e)
+                return True
+            except ErroPNCP as e:
+                self.stats["erros"] += 1
+                log.error("PNCP nao respondeu a janela %s a %s por %s: %s", ini, fim, tentativa, e)
+        return False
 
     def _inicio(self, chave: str, ate: date) -> date:
         ck = db.ler_checkpoint(self.con, chave)

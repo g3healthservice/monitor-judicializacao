@@ -123,3 +123,44 @@ def test_zip_com_rar_dentro(tmp_path):
     nomes = [n for n, _ in _pdfs_de(buf.getvalue())]
     assert "Aviso.pdf" in nomes
     assert any(n.endswith("Completo/Edital.pdf") for n in nomes)
+
+
+class ClienteInstavel(ClienteFalso):
+    """A consulta por atualizacao sempre falha (como o PNCP em periodos antigos)."""
+
+    def __init__(self, publicacao_falha=False):
+        super().__init__()
+        self.publicacao_falha = publicacao_falha
+        self.chamadas = []
+
+    def contratacoes(self, ini, fim, mod, uasg=None, por="atualizacao"):
+        from licitacoes.pncp import ErroPNCP
+        self.chamadas.append(por)
+        if por == "atualizacao" or self.publicacao_falha:
+            raise ErroPNCP("HTTP Error 500")
+        return iter([REG_709])
+
+
+def test_primeira_carga_usa_publicacao_e_depois_atualizacao(tmp_path):
+    from datetime import date
+    cfg = Config(db_path=str(tmp_path / "m.db"), saida_dir=tmp_path / "out")
+    con = db.conectar(cfg.db_path)
+    cli = ClienteInstavel()
+    Coletor(cfg, REGRAS, con, cli).coletar(ate=date(2026, 11, 24))
+    assert set(cli.chamadas) == {"publicacao"}  # primeira carga
+    assert db.ler_checkpoint(con, "atualizacao:00394544000185:250005:6") == "2026-11-24"
+    # Incremental: atualizacao falha, cai para publicacao e a coleta continua.
+    cli.chamadas.clear()
+    stats = Coletor(cfg, REGRAS, con, cli).coletar(ate=date(2026, 11, 25))
+    assert cli.chamadas == ["atualizacao", "publicacao"]
+    assert stats["lidas"] == 1
+    assert db.ler_checkpoint(con, "atualizacao:00394544000185:250005:6") == "2026-11-25"
+
+
+def test_falha_total_nao_derruba_nem_avanca_checkpoint(tmp_path):
+    from datetime import date
+    cfg = Config(db_path=str(tmp_path / "m.db"), saida_dir=tmp_path / "out")
+    con = db.conectar(cfg.db_path)
+    stats = Coletor(cfg, REGRAS, con, ClienteInstavel(publicacao_falha=True)).coletar(ate=date(2026, 11, 24))
+    assert stats["erros"] > 0
+    assert db.ler_checkpoint(con, "atualizacao:00394544000185:250005:6") is None
