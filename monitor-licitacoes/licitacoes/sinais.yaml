@@ -1,0 +1,93 @@
+# Sinais de que a demanda admite medicamento sem registro na Anvisa.
+#
+# Cada sinal soma seu peso UMA vez por contratacao, mesmo que apareca em
+# varios documentos. A contratacao entra na fila de candidatas quando:
+#   pontuacao >= limiar   E   (exige_alto = false OU ha pelo menos um sinal "alto").
+#
+# Como escrever:
+#   frases: texto em minusculas e sem acento. A busca tolera espacos
+#           quebrados no meio das palavras (defeito comum na leitura de PDF),
+#           acento e maiusculas. Ex.: "licenca de importacao".
+#   regex:  expressao regular aplicada ao texto em minusculas e sem acento
+#           (º e ° viram "o"). Use para casos que pedem fronteira de palavra.
+#
+# historico_fracasso nao vem do texto: e calculado a partir dos resultados ja
+# coletados (etapa 2). Marca a contratacao quando o mesmo principio ativo de um
+# item ja terminou fracassado, deserto ou cancelado numa contratacao anterior.
+
+limiar: 6
+exige_alto: true
+
+pesos:
+  alto: 3
+  medio: 2
+  baixo: 1
+
+sinais:
+  - id: sem_registro_anvisa
+    nome: Admite expressamente produto sem registro na Anvisa
+    peso: alto
+    frases:
+      - sem registro na anvisa
+      - sem registro sanitario
+      - sem registro no brasil
+      - nao registrado na anvisa
+      - nao registrados na anvisa
+      - medicamento sem registro
+      - medicamentos sem registro
+      - produto sem registro
+
+  - id: importacao_excepcional
+    nome: Cita importacao excepcional, RDC 203/2017 ou RDC 488/2021
+    peso: alto
+    frases:
+      - importacao excepcional
+      - carater de excepcionalidade
+    regex:
+      - 'rdc\s*(n\s*[o.]?\s*)?\.?\s*(203|488)\b'
+
+  - id: historico_fracasso
+    nome: Item anterior fracassado, deserto ou cancelado (mesmo principio ativo)
+    peso: alto
+
+  - id: ich_ou_oms
+    nome: Exige registro em pais ICH ou pre-qualificacao OMS
+    peso: medio
+    frases:
+      - conselho internacional para harmonizacao
+      - international council for harmonisation
+      - international council for harmonization
+      - who prequalification
+    regex:
+      - '\(\s*ich\s*\)|\bich\b'
+      - 'pre\s*-?\s*qualifica\w*\s*(pela|da|junto\s*a)?\s*(organizacao\s*mundial\s*d[ae]\s*saude|\boms\b|\bwho\b)'
+
+  - id: empresa_estrangeira
+    nome: Permite empresa estrangeira ou nacional
+    peso: medio
+    frases:
+      - empresas estrangeiras
+      - empresa estrangeira
+      - licitantes estrangeiros
+      - licitante estrangeiro
+
+  - id: importacao_logistica
+    nome: Cita licenca de importacao, DUIMP ou desembaraco
+    peso: medio
+    frases:
+      - licenca de importacao
+      - declaracao de importacao
+      - desembaraco aduaneiro
+      - desembaraco alfandegario
+    regex:
+      - '\bduimp\b'
+
+  - id: demanda_judicial
+    nome: Medicamento de demanda judicial (CGLJUD)
+    peso: baixo
+    frases:
+      - cgljud
+      - demandas judiciais
+      - demanda judicial
+      - determinacoes judiciais
+      - determinacao judicial
