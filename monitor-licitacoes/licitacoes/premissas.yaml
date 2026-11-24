@@ -1,0 +1,29 @@
+# Premissas de custo e pesos da nota de viabilidade (etapa 3).
+#
+# Os valores de custo vêm da aba "Premissas" da planilha
+# "Prévia de custos: importação (Índia) × nacional" (24/11/2026).
+# São premissas para triagem, não cotação: atualize antes de decidir.
+
+custo:
+  cambio_brl_por_inr: 0.055      # R$ por ₹ 1. Fontes de câmbio divergiram entre datas.
+  frete_seguro: 0.06             # % do preço indiano (faixa considerada 4–8%; refrigerado pode ser maior)
+  imposto_importacao: 0.0        # % sobre CIF. Medicamentos variam de 0 a 18% por NCM.
+  desembaraco: 0.02              # desembaraço, armazenagem e despachante (% do CIF), sem fonte
+  desconto_volume: 0.0           # desconto do fabricante sobre o preço indiano
+  # IPI 0% e PIS/COFINS 0% (hipóteses, confirmar NCM); ICMS isento (Convênio 87/02).
+
+# Nota de viabilidade de 0 a 100. Os pesos são relativos. Critério sem dado conta
+# como neutro (50), e a cobertura diz quanto do peso total foi avaliado com dado.
+viabilidade:
+  pesos:
+    admissao: 30       # o edital aceita produto sem registro, e com quais provas
+    margem: 30         # valor de referência contra custo desembarcado
+    fornecedor: 15     # fabricantes cotados com registro ICH ou pré-qualificação OMS
+    prazo: 15          # dias até o fim das propostas ou até o prazo de diligência
+    escala: 10         # quantidade contra a capacidade típica de um fornecedor
+  # Margem: nota 0 com margem igual ou abaixo de margem_zero, nota 100 com
+  # margem igual ou acima de margem_cheia (linear entre as duas).
+  margem_zero: -0.10
+  margem_cheia: 0.30
+  # Prazo em dias: nota 0 com prazo vencido, 100 a partir de prazo_cheio.
+  prazo_cheio_dias: 15

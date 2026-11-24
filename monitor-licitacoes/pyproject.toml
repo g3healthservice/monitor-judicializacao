@@ -20,7 +20,7 @@ licitacoes = "licitacoes.cli:main"
 packages = ["licitacoes"]
 
 [tool.setuptools.package-data]
-licitacoes = ["sinais.yaml"]
+licitacoes = ["sinais.yaml", "premissas.yaml"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

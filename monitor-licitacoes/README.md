@@ -1,7 +1,7 @@
 # Monitor de licitações de medicamentos sem registro
 
 Projeto separado do monitor de judicialização. Implementa as **etapas 1 (monitor e
-filtro) e 2 (resultados por item)** da especificação "Especificação do agente de
+filtro), 2 (resultados por item) e 3 (ficha e viabilidade)** da especificação "Especificação do agente de
 monitoramento de licitações de medicamentos sem registro".
 
 Todo dia ele:
@@ -92,6 +92,44 @@ Mudanças entre uma leitura e a seguinte viram eventos em `lic_evento`, a base d
 alertas da etapa 4. Na primeira leitura de uma contratação o agente só registra o
 estado atual, sem gerar eventos, para a carga inicial não virar uma enxurrada de avisos.
 
+## Ficha e nota de viabilidade (etapa 3)
+
+Cada item das candidatas, e cada item que você cotar, ganha uma ficha com
+identificação, quantidade, valor de referência, regras de elegibilidade (os sinais
+do edital), resultado, prazos, **custo desembarcado** e o **FOB máximo em rupias** que
+cabe na referência. A fórmula é a da planilha "Prévia de custos: importação (Índia)
+× nacional":
+
+```
+custo   = FOB × câmbio × (1 + frete) × (1 + II + desembaraço) × (1 − desconto)
+FOB máx = referência / (câmbio × (1 + frete) × (1 + II + desembaraço))
+```
+
+As premissas (câmbio 0,055 R$/₹, frete 6%, II 0%, desembaraço 2%, desconto 0%) e os
+pesos da nota ficam em [`licitacoes/premissas.yaml`](licitacoes/premissas.yaml).
+
+**Cotações.** O PNCP não traz preço indiano nem fabricante, e o valor estimado da
+DLOG costuma ser sigiloso. Esses dados ficam em [`cotacoes.csv`](cotacoes.csv), uma
+linha por item (`contratacao` = identificador como `250005-709-2026`, `item` = número
+do item). Colunas: `preco_inr`, `referencia_brl` e `referencia_tipo` (edital ou
+mercado), `menor_oferta_brl`, `fabricantes_ich_oms`, `capacidade_fornecedor`,
+`prazo_manual` (ex.: prazo de diligência, `2026-11-23T12:00`), `fonte`, `data` e
+`observacao`. O arquivo já vem com as linhas da planilha.
+
+**Nota de 0 a 100**, com os pesos ajustáveis:
+
+| Critério | Peso | Como pontua |
+|---|---|---|
+| Admissão de produto sem registro | 30 | 100 com cláusula expressa; 60 só ICH/OMS; 40 só histórico de fracasso |
+| Margem estimada | 30 | 0 com margem ≤ −10%, 100 com margem ≥ 30%, linear entre os dois |
+| Disponibilidade de fornecedor | 15 | 0, 1, 2 ou 3+ fabricantes ICH/OMS cotados = 0, 50, 80, 100 |
+| Prazo | 15 | dias até o fim das propostas ou o prazo informado; 100 a partir de 15 dias |
+| Escala | 10 | 100 até 1× a capacidade típica; 0 a partir de 4× |
+
+Critério sem dado conta como neutro (50), e a ficha mostra a **cobertura**: quanto do
+peso total veio de dado real. A lista sai ordenada, com o motivo de cada nota. A
+decisão de participar continua sendo sua.
+
 ## Uso
 
 ```bash
@@ -108,13 +146,16 @@ python -m licitacoes.cli acompanhar                    # etapa 2: situação, ve
 python -m licitacoes.cli resultados                    # itens das candidatas + CSV em out/
 python -m licitacoes.cli resultados 90114              # itens de uma contratação
 python -m licitacoes.cli eventos --desde 2026-11-01    # mudanças detectadas
+python -m licitacoes.cli viabilidade                   # etapa 3: lista ordenada + CSV em out/
+python -m licitacoes.cli viabilidade --abertas         # só itens com prazo aberto
+python -m licitacoes.cli ficha 709 1                   # ficha completa de um item
 python -m licitacoes.cli reavaliar                     # após mudar sinais.yaml (sem rede)
 ```
 
 Variáveis de ambiente (todas opcionais): `LIC_DB_PATH` (padrão `monitor.db`),
 `LIC_UASGS` (padrão `250005`, aceita lista separada por vírgula), `LIC_CNPJ_ORGAO`,
 `LIC_MODALIDADES` (padrão `6`, pregão eletrônico), `LIC_LOOKBACK_DIAS`,
-`LIC_SAIDA_DIR`, `LIC_SINAIS_PATH`.
+`LIC_SAIDA_DIR`, `LIC_SINAIS_PATH`, `LIC_PREMISSAS_PATH`, `LIC_COTACOES_PATH`.
 
 ## Agendamento
 
@@ -136,5 +177,4 @@ PNCP, então rodam sem rede.
 
 ## Próximas etapas
 
-3. Ficha por item e nota de viabilidade.
 4. Simulador de cenários e alertas.

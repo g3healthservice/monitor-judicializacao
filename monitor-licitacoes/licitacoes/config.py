@@ -11,6 +11,16 @@ def _lista(valor: str) -> List[str]:
     return [v.strip() for v in valor.split(",") if v.strip()]
 
 
+def _achar_cotacoes() -> Path:
+    if os.getenv("LIC_COTACOES_PATH"):
+        return Path(os.environ["LIC_COTACOES_PATH"])
+    for c in (Path("cotacoes.csv"), Path("monitor-licitacoes/cotacoes.csv"),
+              Path(__file__).resolve().parents[1] / "cotacoes.csv"):
+        if c.exists():
+            return c
+    return Path("cotacoes.csv")
+
+
 @dataclass
 class Config:
     # Mesmo banco SQLite do monitor de judicializacao; tabelas com prefixo lic_.
@@ -34,3 +44,10 @@ class Config:
         )
     )
     saida_dir: Path = field(default_factory=lambda: Path(os.getenv("LIC_SAIDA_DIR", "out")))
+    premissas_path: Path = field(
+        default_factory=lambda: Path(
+            os.getenv("LIC_PREMISSAS_PATH", str(Path(__file__).with_name("premissas.yaml")))
+        )
+    )
+    # Cotacoes registradas por voce (precos indianos, referencias, fabricantes).
+    cotacoes_path: Path = field(default_factory=lambda: _achar_cotacoes())

@@ -36,6 +36,13 @@ def main(argv=None) -> int:
     e.add_argument("--desde", help="AAAA-MM-DD")
     e.add_argument("--candidatas", action="store_true", help="so das contratacoes candidatas")
 
+    vb = sub.add_parser("viabilidade", help="nota de viabilidade por item, ordenada, com o motivo")
+    vb.add_argument("--abertas", action="store_true", help="so itens com prazo ainda aberto")
+
+    fi = sub.add_parser("ficha", help="ficha completa de uma contratacao (ou de um item)")
+    fi.add_argument("numero", help="709, 90114, 90114/2026...")
+    fi.add_argument("item", nargs="?", type=int)
+
     sub.add_parser("reavaliar", help="recalcula pontuacao apos mudar pesos/limiar (sem rede)")
 
     l = sub.add_parser("candidatas", help="lista as demandas candidatas e grava CSV/Markdown")
@@ -67,6 +74,24 @@ def main(argv=None) -> int:
         print(f"Gravado: {relatorio.gravar_itens_csv(con, lista, cfg.saida_dir)}")
     elif a.cmd == "eventos":
         print(relatorio.texto_eventos(relatorio.eventos(con, a.desde, a.candidatas)))
+    elif a.cmd in ("viabilidade", "ficha"):
+        from . import viabilidade as vb_mod
+        premissas = vb_mod.carregar_premissas(cfg.premissas_path)
+        cotacoes = vb_mod.carregar_cotacoes(cfg.cotacoes_path)
+        if a.cmd == "viabilidade":
+            lista = vb_mod.fichas(con, premissas, cotacoes)
+            if a.abertas:
+                lista = [f for f in lista if f["criterios"]["prazo"]]
+            print(vb_mod.texto_lista(lista))
+            print(f"Gravado: {vb_mod.gravar_csv(lista, cfg.saida_dir)}")
+        else:
+            achadas = relatorio.buscar(con, a.numero)
+            if not achadas:
+                print(f"{a.numero}: nao encontrado no banco")
+            for c in achadas:
+                for f in vb_mod.fichas(con, premissas, cotacoes, c["numero_controle"]):
+                    if a.item is None or f["item"]["numero_item"] == a.item:
+                        print(vb_mod.texto_ficha(f) + "\n")
     elif a.cmd == "reavaliar":
         print(f"{relatorio.reavaliar(con, regras)} contratacoes reavaliadas")
     elif a.cmd == "candidatas":
