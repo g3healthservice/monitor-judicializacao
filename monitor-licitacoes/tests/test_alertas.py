@@ -124,3 +124,13 @@ def test_email_monta_mensagem(banco, monkeypatch):
     assert "1 prazo(s) em 48 h" in m["Subject"] and "1 edital(is) novo(s)" in m["Subject"]
     corpo_html = m.get_body(("html",)).get_content()
     assert "Prazos a menos de 48 horas" in corpo_html and "PE 90114/2026" in corpo_html
+
+
+def test_painel_publico_sem_dados_de_cotacao(banco):
+    from licitacoes import painel
+    _cfg, con, _cli = banco
+    pagina = painel.gerar_html(con, REGRAS, AGORA)
+    assert "PE 90114/2026" in pagina and "Tolvaptana" in pagina
+    assert "<title>Radar de Licitações</title>" in pagina
+    for privado in ("₹", "margem", "preco_inr", "custo desembarcado"):
+        assert privado not in pagina.lower()

@@ -60,6 +60,8 @@ jobs:
           python -m licitacoes.cli viabilidade > monitor-licitacoes/saida/licitacoes_viabilidade.txt
           # Etapa 4a: cenarios (cambio, imposto, frete, volume) dos itens cotados.
           python -m licitacoes.cli simular > monitor-licitacoes/saida/licitacoes_cenarios.txt
+          # Painel publico (GitHub Pages): so dados do PNCP, sem cotacoes.
+          python -m licitacoes.cli painel --saida docs/licitacoes/index.html
           python -m licitacoes.cli eventos --desde "$(date -u -d '-1 day' '+%Y-%m-%d')" \
             > monitor-licitacoes/saida/licitacoes_eventos.txt
           {
@@ -104,6 +106,6 @@ jobs:
         run: |
           git config user.name  "g3-bot"
           git config user.email "g3.representante@gmail.com"
-          git add -f monitor.db monitor-licitacoes/saida/
+          git add -f monitor.db monitor-licitacoes/saida/ docs/licitacoes/index.html
           git commit -m "Licitacoes: atualizacao automatica $(date -u '+%Y-%m-%d %H:%M UTC')" || echo "sem mudancas"
           git push
