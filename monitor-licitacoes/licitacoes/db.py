@@ -96,13 +96,81 @@ CREATE TABLE IF NOT EXISTS lic_checkpoint (
 );
 
 CREATE INDEX IF NOT EXISTS ix_lic_compra_candidata ON lic_compra (candidata, pontuacao);
+
+-- Etapa 2: resultado por item -------------------------------------------
+
+-- Vencedor(es) de cada item, como o PNCP publica apos a homologacao.
+CREATE TABLE IF NOT EXISTS lic_resultado (
+    numero_controle     TEXT NOT NULL,
+    numero_item         INTEGER NOT NULL,
+    sequencial_resultado INTEGER NOT NULL,
+    fornecedor_ni       TEXT,               -- CNPJ do fornecedor (dado publico)
+    fornecedor_nome     TEXT,
+    fornecedor_porte    TEXT,
+    codigo_pais         TEXT,
+    pais_origem_produto TEXT,
+    quantidade_homologada REAL,
+    valor_unitario_homologado REAL,
+    valor_total_homologado REAL,
+    moeda_estrangeira   TEXT,
+    valor_moeda_estrangeira REAL,
+    ordem_classificacao INTEGER,
+    situacao            TEXT,
+    data_resultado      TEXT,
+    data_cancelamento   TEXT,
+    motivo_cancelamento TEXT,
+    lido_em             TEXT,
+    PRIMARY KEY (numero_controle, numero_item, sequencial_resultado)
+);
+
+CREATE TABLE IF NOT EXISTS lic_ata (
+    numero_controle_ata TEXT PRIMARY KEY,
+    numero_controle     TEXT NOT NULL,
+    numero_ata          TEXT,
+    ano_ata             INTEGER,
+    data_assinatura     TEXT,
+    vigencia_inicio     TEXT,
+    vigencia_fim        TEXT,
+    cancelado           INTEGER,
+    data_cancelamento   TEXT,
+    lido_em             TEXT
+);
+
+-- Mudancas detectadas entre uma leitura e a seguinte (base dos alertas).
+CREATE TABLE IF NOT EXISTS lic_evento (
+    id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+    numero_controle     TEXT NOT NULL,
+    numero_item         INTEGER,
+    tipo                TEXT NOT NULL,      -- situacao | resultado | ata
+    de                  TEXT,
+    para                TEXT,
+    detalhe             TEXT,
+    detectado_em        TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS ix_lic_evento_data ON lic_evento (detectado_em);
 """
+
+# Colunas acrescentadas depois da primeira versao (o banco pode ja existir).
+_COLUNAS_NOVAS = {
+    "lic_item": {
+        "situacao_id": "INTEGER",
+        "principio": "TEXT",            # principio ativo normalizado (para o historico)
+        "fase": "TEXT",                 # situacao derivada, ver resultados.fase()
+        "resultado_versao": "TEXT",     # data_atualizacao do item quando o resultado foi lido
+    },
+}
 
 
 def conectar(caminho: str) -> sqlite3.Connection:
     con = sqlite3.connect(caminho, timeout=60)
     con.row_factory = sqlite3.Row
     con.executescript(ESQUEMA)
+    for tabela, colunas in _COLUNAS_NOVAS.items():
+        existentes = {r["name"] for r in con.execute(f"PRAGMA table_info({tabela})")}
+        for nome, tipo in colunas.items():
+            if nome not in existentes:
+                con.execute(f"ALTER TABLE {tabela} ADD COLUMN {nome} {tipo}")
+    con.commit()
     return con
 
 

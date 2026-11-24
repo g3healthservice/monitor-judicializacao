@@ -1,7 +1,8 @@
 name: Monitor de Licitacoes (sem registro)
 
-# Etapa 1 do agente de licitacoes: coleta diaria no PNCP (UASG 250005 - DLOG/MS),
-# leitura de edital/TR e marcacao das demandas que admitem medicamento sem registro.
+# Agente de licitacoes, etapas 1 e 2: coleta diaria no PNCP (UASG 250005 - DLOG/MS),
+# leitura de edital/TR, marcacao das demandas que admitem medicamento sem registro
+# e acompanhamento do resultado de cada item (situacao, vencedor, ata).
 # Grava no mesmo monitor.db do monitor de judicializacao (tabelas lic_*).
 on:
   schedule:
@@ -51,8 +52,21 @@ jobs:
           else
             python -m licitacoes.cli coletar
           fi
+          # Etapa 2: situacao, vencedor e ata dos itens ainda sem resultado final.
+          python -m licitacoes.cli acompanhar
           python -m licitacoes.cli candidatas > /dev/null
-          cat monitor-licitacoes/saida/licitacoes_candidatas.md >> "$GITHUB_STEP_SUMMARY"
+          python -m licitacoes.cli resultados > monitor-licitacoes/saida/licitacoes_resultados.txt
+          python -m licitacoes.cli eventos --desde "$(date -u -d '-1 day' '+%Y-%m-%d')" \
+            > monitor-licitacoes/saida/licitacoes_eventos.txt
+          {
+            cat monitor-licitacoes/saida/licitacoes_candidatas.md
+            echo; echo "## Mudanças nas últimas 24 horas"; echo; echo '```'
+            cat monitor-licitacoes/saida/licitacoes_eventos.txt
+            echo '```'
+            echo; echo "## Situação por item das candidatas"; echo; echo '```'
+            cat monitor-licitacoes/saida/licitacoes_resultados.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Commit do banco e da lista de candidatas
         run: |

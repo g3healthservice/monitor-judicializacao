@@ -67,6 +67,12 @@ class ClienteFalso:
                  "tipoDocumentoNome": "Edital", "url": "https://pncp.gov.br/x/arquivos/2",
                  "dataPublicacaoPncp": "2026-09-30T04:01:09", "statusAtivo": True}]
 
+    def resultados(self, cnpj, ano, seq, item):
+        return []
+
+    def atas(self, cnpj, ano, seq):
+        return []
+
     def baixar(self, url):
         self.downloads += 1
         return _pdf(EDITAL_90114)

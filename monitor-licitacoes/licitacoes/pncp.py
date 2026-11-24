@@ -109,6 +109,15 @@ class ClientePNCP:
     def arquivos(self, cnpj: str, ano: int, seq: int) -> List[Dict]:
         return self._json(f"{self._compra(cnpj, ano, seq)}/arquivos") or []
 
+    def resultados(self, cnpj: str, ano: int, seq: int, item: int) -> List[Dict]:
+        return self._json(f"{self._compra(cnpj, ano, seq)}/itens/{item}/resultados") or []
+
+    def atas(self, cnpj: str, ano: int, seq: int) -> List[Dict]:
+        dados = self._json(f"{self._compra(cnpj, ano, seq)}/atas")
+        if isinstance(dados, dict):
+            return dados.get("data") or []
+        return dados or []
+
     def baixar(self, url: str) -> Optional[bytes]:
         return self._get(url)
 

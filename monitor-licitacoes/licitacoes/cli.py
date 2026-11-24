@@ -26,6 +26,16 @@ def main(argv=None) -> int:
     c.add_argument("--por", choices=["atualizacao", "publicacao"], default="atualizacao")
     c.add_argument("--reprocessar", action="store_true", help="rele documentos ja avaliados")
 
+    ac = sub.add_parser("acompanhar", help="atualiza situacao, vencedor e ata dos itens pendentes")
+    ac.add_argument("--candidatas", action="store_true", help="so as contratacoes candidatas")
+
+    r = sub.add_parser("resultados", help="situacao por item das candidatas (ou de uma contratacao)")
+    r.add_argument("numero", nargs="?", help="709, 90114, 90114/2026... (padrao: todas as candidatas)")
+
+    e = sub.add_parser("eventos", help="mudancas detectadas (situacao, resultado, ata)")
+    e.add_argument("--desde", help="AAAA-MM-DD")
+    e.add_argument("--candidatas", action="store_true", help="so das contratacoes candidatas")
+
     sub.add_parser("reavaliar", help="recalcula pontuacao apos mudar pesos/limiar (sem rede)")
 
     l = sub.add_parser("candidatas", help="lista as demandas candidatas e grava CSV/Markdown")
@@ -48,6 +58,15 @@ def main(argv=None) -> int:
     elif a.cmd == "coletar":
         stats = Coletor(cfg, regras, con).coletar(a.desde, a.ate, a.por, a.reprocessar)
         print(json.dumps(stats, ensure_ascii=False))
+    elif a.cmd == "acompanhar":
+        stats = Coletor(cfg, regras, con).acompanhar(somente_candidatas=a.candidatas)
+        print(json.dumps(stats, ensure_ascii=False))
+    elif a.cmd == "resultados":
+        lista = relatorio.buscar(con, a.numero) if a.numero else relatorio.candidatas(con)
+        print(relatorio.texto_resultados(con, lista))
+        print(f"Gravado: {relatorio.gravar_itens_csv(con, lista, cfg.saida_dir)}")
+    elif a.cmd == "eventos":
+        print(relatorio.texto_eventos(relatorio.eventos(con, a.desde, a.candidatas)))
     elif a.cmd == "reavaliar":
         print(f"{relatorio.reavaliar(con, regras)} contratacoes reavaliadas")
     elif a.cmd == "candidatas":

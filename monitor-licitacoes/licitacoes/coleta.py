@@ -17,6 +17,7 @@ from typing import Dict, Iterable, List, Optional, Tuple
 from . import db
 from .config import Config
 from .pncp import ClientePNCP, ErroPNCP, url_publica
+from .resultados import Acompanhamento
 from .sinais import Regras
 from .texto import extrair_pdf, normalizar
 
@@ -128,8 +129,9 @@ class Coletor:
         self.regras = regras
         self.con = con
         self.cliente = cliente or ClientePNCP(cfg)
+        self.acomp = Acompanhamento(con, self.cliente)
         self.stats = {"lidas": 0, "processadas": 0, "medicamentos": 0, "arquivos_lidos": 0,
-                      "candidatas_novas": 0, "erros": 0}
+                      "candidatas_novas": 0, "eventos": 0, "erros": 0}
 
     # -- Varredura --------------------------------------------------------
     def coletar(self, desde: Optional[date] = None, ate: Optional[date] = None,
@@ -214,8 +216,11 @@ class Coletor:
         ts = agora()
 
         itens = self.cliente.itens(cnpj, ano, seq)
+        antes = self.acomp.estado_anterior(nc)
         self._gravar_itens(nc, itens, ts)
         medicamento = eh_medicamento(itens, objeto)
+        if medicamento:
+            self._acompanhar_itens(nc, cnpj, ano, seq, itens, antes, ts)
 
         titulos: List[str] = []
         if medicamento:
@@ -225,6 +230,27 @@ class Coletor:
                 titulos.append(arq.get("titulo") or "")
                 self._ler_arquivo(nc, arq, ts, forcar)
 
+        nota = self._pontuar(nc, medicamento, era_candidata)
+        with db.transacao(self.con):
+            self.con.execute(
+                """UPDATE lic_compra SET eh_medicamento=?, numero_pregao=COALESCE(numero_pregao, ?),
+                       avaliada_em=?, avaliada_versao=?
+                   WHERE numero_controle=?""",
+                (int(medicamento), numero_pregao(*titulos), ts,
+                 reg.get("dataAtualizacaoGlobal") or reg.get("dataAtualizacao"), nc),
+            )
+        log.info("%s | med=%s pontos=%s candidata=%s | %s", nc, medicamento,
+                 nota["pontuacao"], nota["candidata"], objeto[:70])
+
+    # -- Etapa 2: resultado por item ---------------------------------------
+    def _acompanhar_itens(self, nc, cnpj, ano, seq, itens, antes, ts) -> None:
+        cont = self.acomp.atualizar(nc, cnpj, ano, seq, itens, antes, ts)
+        self.stats["eventos"] += cont["eventos"]
+        regra = next((s for s in self.regras.sinais if s.id == "historico_fracasso"), None)
+        if regra:
+            self.acomp.sinal_historico(nc, ts, regra.nivel, regra.peso)
+
+    def _pontuar(self, nc: str, medicamento: bool, era_candidata: bool) -> Dict[str, object]:
         ids = [r["sinal_id"] for r in self.con.execute(
             "SELECT DISTINCT sinal_id FROM lic_sinal WHERE numero_controle = ?", (nc,))]
         nota = self.regras.pontuar(ids) if medicamento else {"pontuacao": 0, "tem_alto": False, "candidata": False}
@@ -232,15 +258,60 @@ class Coletor:
             self.stats["candidatas_novas"] += 1
         with db.transacao(self.con):
             self.con.execute(
-                """UPDATE lic_compra SET eh_medicamento=?, pontuacao=?, tem_alto=?, candidata=?,
-                       numero_pregao=COALESCE(numero_pregao, ?), avaliada_em=?, avaliada_versao=?
-                   WHERE numero_controle=?""",
-                (int(medicamento), nota["pontuacao"], int(nota["tem_alto"]), int(nota["candidata"]),
-                 numero_pregao(*titulos), ts,
-                 reg.get("dataAtualizacaoGlobal") or reg.get("dataAtualizacao"), nc),
-            )
-        log.info("%s | med=%s pontos=%s candidata=%s | %s", nc, medicamento,
-                 nota["pontuacao"], nota["candidata"], objeto[:70])
+                "UPDATE lic_compra SET pontuacao=?, tem_alto=?, candidata=? WHERE numero_controle=?",
+                (nota["pontuacao"], int(nota["tem_alto"]), int(nota["candidata"]), nc))
+        return nota
+
+    def acompanhar(self, somente_candidatas: bool = False) -> Dict[str, int]:
+        """Rele itens, resultados e atas das contratacoes de medicamento ainda sem
+        resultado final (sem reler editais). Complementa a coleta incremental,
+        para nao depender de o PNCP mudar a data de atualizacao da contratacao."""
+        filtro = "AND c.candidata = 1" if somente_candidatas else ""
+        pendentes = self.con.execute(
+            f"""SELECT c.numero_controle, c.cnpj, c.ano, c.sequencial, c.candidata FROM lic_compra c
+                WHERE c.eh_medicamento = 1 {filtro}
+                  AND (EXISTS (SELECT 1 FROM lic_item i WHERE i.numero_controle = c.numero_controle
+                                AND (i.situacao_id IS NULL OR i.situacao_id = 1))
+                       OR NOT EXISTS (SELECT 1 FROM lic_ata a WHERE a.numero_controle = c.numero_controle)
+                          AND EXISTS (SELECT 1 FROM lic_item i WHERE i.numero_controle = c.numero_controle
+                                AND i.situacao_id = 2))
+                ORDER BY c.data_publicacao""").fetchall()
+        log.info("Acompanhando %s contratacoes com itens pendentes", len(pendentes))
+        for c in pendentes:
+            ts = agora()
+            try:
+                itens = self.cliente.itens(c["cnpj"], c["ano"], c["sequencial"])
+                antes = self.acomp.estado_anterior(c["numero_controle"])
+                self._gravar_itens(c["numero_controle"], itens, ts)
+                self._acompanhar_itens(c["numero_controle"], c["cnpj"], c["ano"], c["sequencial"],
+                                       itens, antes, ts)
+                self._pontuar(c["numero_controle"], True, bool(c["candidata"]))
+                self.stats["processadas"] += 1
+            except ErroPNCP as e:
+                self.stats["erros"] += 1
+                log.error("Falha ao acompanhar %s: %s", c["numero_controle"], e)
+        self.recalcular_historico()
+        return self.stats
+
+    def recalcular_historico(self) -> int:
+        """Refaz o sinal de historico e a pontuacao de todas as contratacoes de
+        medicamento (sem rede). Necessario porque uma contratacao antiga pode ser
+        lida depois de uma mais nova."""
+        regra = next((s for s in self.regras.sinais if s.id == "historico_fracasso"), None)
+        if not regra:
+            return 0
+        ts = agora()
+        from .resultados import principio
+        with db.transacao(self.con):
+            for i in self.con.execute("SELECT numero_controle, numero_item, descricao FROM lic_item").fetchall():
+                self.con.execute("UPDATE lic_item SET principio=? WHERE numero_controle=? AND numero_item=?",
+                                 (principio(i["descricao"]), i["numero_controle"], i["numero_item"]))
+        compras = self.con.execute(
+            "SELECT numero_controle, candidata FROM lic_compra WHERE eh_medicamento = 1").fetchall()
+        for c in compras:
+            self.acomp.sinal_historico(c["numero_controle"], ts, regra.nivel, regra.peso)
+            self._pontuar(c["numero_controle"], True, bool(c["candidata"]))
+        return len(compras)
 
     def _gravar_itens(self, nc: str, itens: Iterable[Dict], ts: str) -> None:
         with db.transacao(self.con):

@@ -11,8 +11,9 @@
 #   regex:  expressao regular aplicada ao texto em minusculas e sem acento
 #           (º e ° viram "o"). Use para casos que pedem fronteira de palavra.
 #
-# O sinal "item anterior fracassado, deserto ou cancelado" do doc depende do
-# historico de resultados por CATMAT no PNCP e entra na etapa 2.
+# historico_fracasso nao vem do texto: e calculado a partir dos resultados ja
+# coletados (etapa 2). Marca a contratacao quando o mesmo principio ativo de um
+# item ja terminou fracassado, deserto ou cancelado numa contratacao anterior.
 
 limiar: 6
 exige_alto: true
@@ -44,6 +45,10 @@ sinais:
       - carater de excepcionalidade
     regex:
       - 'rdc\s*(n\s*[o.]?\s*)?\.?\s*(203|488)\b'
+
+  - id: historico_fracasso
+    nome: Item anterior fracassado, deserto ou cancelado (mesmo principio ativo)
+    peso: alto
 
   - id: ich_ou_oms
     nome: Exige registro em pais ICH ou pre-qualificacao OMS
