@@ -1,0 +1,46 @@
+250005-162-2027 item 1 — Imunoglobulina humana 5 g | preço indiano ₹ 8.000,00 | referência (mercado) R$ 1.715,00
+   Cenário                          Custo/un   Margem        FOB máx
+   Base                            R$ 475,73     +72%    ₹ 28.840,01
+   Câmbio +10%                     R$ 523,30     +69%    ₹ 26.218,19
+   Imposto de importação 10%       R$ 522,37     +70%    ₹ 26.265,01
+   Imposto de importação 18%       R$ 559,68     +67%    ₹ 24.514,01
+   Frete refrigerado 12%           R$ 502,66     +71%    ₹ 27.295,01
+   Desconto de 5% por volume       R$ 451,94     +74%    ₹ 30.357,90
+
+250005-441-2026 item 1 — Concentrado de fator IX | preço indiano ₹ 19,80 | referência (mercado) R$ 0,57
+   Cenário                          Custo/un   Margem        FOB máx
+   Base                              R$ 1,18    -107%         ₹ 9,59  ACIMA DA REFERÊNCIA
+   Câmbio +10%                       R$ 1,30    -127%         ₹ 8,71  ACIMA DA REFERÊNCIA
+   Imposto de importação 10%         R$ 1,29    -127%         ₹ 8,73  ACIMA DA REFERÊNCIA
+   Imposto de importação 18%         R$ 1,39    -143%         ₹ 8,15  ACIMA DA REFERÊNCIA
+   Frete refrigerado 12%             R$ 1,24    -118%         ₹ 9,07  ACIMA DA REFERÊNCIA
+   Desconto de 5% por volume         R$ 1,12     -96%        ₹ 10,09  ACIMA DA REFERÊNCIA
+
+PE 90114/2026 item 1 — Tolvaptana 15 mg | preço indiano ₹ 125,00 | referência (edital) R$ 6,34
+   Cenário                          Custo/un   Margem        FOB máx
+   Base                              R$ 7,43     -17%       ₹ 106,62  ACIMA DA REFERÊNCIA
+   Câmbio +10%                       R$ 8,18     -29%        ₹ 96,92  ACIMA DA REFERÊNCIA
+   Imposto de importação 10%         R$ 8,16     -29%        ₹ 97,10  ACIMA DA REFERÊNCIA
+   Imposto de importação 18%         R$ 8,75     -38%        ₹ 90,62  ACIMA DA REFERÊNCIA
+   Frete refrigerado 12%             R$ 7,85     -24%       ₹ 100,90  ACIMA DA REFERÊNCIA
+   Desconto de 5% por volume         R$ 7,06     -11%       ₹ 112,23  ACIMA DA REFERÊNCIA
+
+PE 90114/2026 item 2 — Tolvaptana 30 mg | preço indiano ₹ 250,00 | referência (edital) R$ 8,86
+   Cenário                          Custo/un   Margem        FOB máx
+   Base                             R$ 14,87     -68%       ₹ 148,99  ACIMA DA REFERÊNCIA
+   Câmbio +10%                      R$ 16,35     -85%       ₹ 135,45  ACIMA DA REFERÊNCIA
+   Imposto de importação 10%        R$ 16,32     -84%       ₹ 135,69  ACIMA DA REFERÊNCIA
+   Imposto de importação 18%        R$ 17,49     -97%       ₹ 126,64  ACIMA DA REFERÊNCIA
+   Frete refrigerado 12%            R$ 15,71     -77%       ₹ 141,01  ACIMA DA REFERÊNCIA
+   Desconto de 5% por volume        R$ 14,12     -59%       ₹ 156,83  ACIMA DA REFERÊNCIA
+
+PE 90114/2026 item 8 — Epinefrina 0,5 mg/mL caneta | preço indiano ₹ 13.000,00 | referência (mercado) R$ 1.390,00
+   Cenário                          Custo/un   Margem        FOB máx
+   Base                            R$ 773,06     +44%    ₹ 23.374,70
+   Câmbio +10%                     R$ 850,36     +39%    ₹ 21.249,73
+   Imposto de importação 10%       R$ 848,85     +39%    ₹ 21.287,67
+   Imposto de importação 18%       R$ 909,48     +35%    ₹ 19.868,50
+   Frete refrigerado 12%           R$ 816,82     +41%    ₹ 22.122,49
+   Desconto de 5% por volume       R$ 734,41     +47%    ₹ 24.604,95
+
+Gravado: monitor-licitacoes/saida/licitacoes_cenarios.csv

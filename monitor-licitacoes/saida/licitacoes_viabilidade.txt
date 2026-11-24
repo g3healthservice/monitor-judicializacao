@@ -1,0 +1,158 @@
+59 itens | 1 com prazo aberto | 54 sem margem calculada (falta preço indiano ou referência em cotacoes.csv)
+
+Nota | Cob. | Pregão / contratação        | Item | Medicamento                          | Fase
+-----|------|-----------------------------|------|--------------------------------------|-----
+  73 |  75% | PE 90114/2026               |    8 | Epinefrina característica adicional: | Em julgamento (aceitação, habilitação ou diligência)
+     a favor: admissão de produto sem registro: edital admite produto sem registro (pré-qualificação OMS ou registro ICH); margem estimada: custo desembarcado R$ 773,06 contra mercado R$ 1.390,00 (margem +44%)
+     contra:  prazo: prazo informado (diligência/proposta) vencido em 2026-11-23
+  58 |  45% | 250005-90059-2026           |    1 | Ácido Cólico                         | Em julgamento (aceitação, habilitação ou diligência)
+     a favor: admissão de produto sem registro: edital admite produto sem registro (pré-qualificação OMS ou registro ICH)
+     contra:  prazo: sem prazo aberto (em julgamento (aceitação, habilitação ou diligência))
+  58 |  45% | 250005-90059-2026           |    2 | Cenobamato                           | Em julgamento (aceitação, habilitação ou diligência)
+     a favor: admissão de produto sem registro: edital admite produto sem registro (pré-qualificação OMS ou registro ICH)
+     contra:  prazo: sem prazo aberto (em julgamento (aceitação, habilitação ou diligência))
+  58 |  45% | 250005-90059-2026           |    3 | Vamorolona                           | Em julgamento (aceitação, habilitação ou diligência)
+     a favor: admissão de produto sem registro: edital admite produto sem registro (pré-qualificação OMS ou registro ICH)
+     contra:  prazo: sem prazo aberto (em julgamento (aceitação, habilitação ou diligência))
+  58 |  45% | 250005-90059-2026           |    4 | Mecassermina                         | Em julgamento (aceitação, habilitação ou diligência)
+     a favor: admissão de produto sem registro: edital admite produto sem registro (pré-qualificação OMS ou registro ICH)
+     contra:  prazo: sem prazo aberto (em julgamento (aceitação, habilitação ou diligência))
+  58 |  45% | 250005-90059-2026           |    5 | Idebenona                            | Em julgamento (aceitação, habilitação ou diligência)
+     a favor: admissão de produto sem registro: edital admite produto sem registro (pré-qualificação OMS ou registro ICH)
+     contra:  prazo: sem prazo aberto (em julgamento (aceitação, habilitação ou diligência))
+  58 |  45% | 250005-90059-2026           |    6 | Sargramostim                         | Em julgamento (aceitação, habilitação ou diligência)
+     a favor: admissão de produto sem registro: edital admite produto sem registro (pré-qualificação OMS ou registro ICH)
+     contra:  prazo: sem prazo aberto (em julgamento (aceitação, habilitação ou diligência))
+  58 |  45% | 250005-90059-2026           |    7 | Hidrocortisona                       | Em julgamento (aceitação, habilitação ou diligência)
+     a favor: admissão de produto sem registro: edital admite produto sem registro (pré-qualificação OMS ou registro ICH)
+     contra:  prazo: sem prazo aberto (em julgamento (aceitação, habilitação ou diligência))
+  58 |  45% | PE 90086/2026               |    1 | MERCAPTAMINA CONCENTRAÇÃO: 25        | Em julgamento (aceitação, habilitação ou diligência)
+     a favor: admissão de produto sem registro: edital admite produto sem registro (pré-qualificação OMS ou registro ICH)
+     contra:  prazo: sem prazo aberto (em julgamento (aceitação, habilitação ou diligência))
+  58 |  45% | PE 90086/2026               |    2 | MERCAPTAMINA COMPOSIÇÃO: SAL BITARTA | Em julgamento (aceitação, habilitação ou diligência)
+     a favor: admissão de produto sem registro: edital admite produto sem registro (pré-qualificação OMS ou registro ICH)
+     contra:  prazo: sem prazo aberto (em julgamento (aceitação, habilitação ou diligência))
+  58 |  45% | PE 90086/2026               |    3 | MERCAPTAMINA COMPOSIÇÃO: SAL BITARTA | Em julgamento (aceitação, habilitação ou diligência)
+     a favor: admissão de produto sem registro: edital admite produto sem registro (pré-qualificação OMS ou registro ICH)
+     contra:  prazo: sem prazo aberto (em julgamento (aceitação, habilitação ou diligência))
+  58 |  45% | PE 90086/2026               |    4 | MERCAPTAMINA COMPOSIÇÃO: SAL BITARTA | Em julgamento (aceitação, habilitação ou diligência)
+     a favor: admissão de produto sem registro: edital admite produto sem registro (pré-qualificação OMS ou registro ICH)
+     contra:  prazo: sem prazo aberto (em julgamento (aceitação, habilitação ou diligência))
+  58 |  45% | PE 90086/2026               |    5 | MERCAPTAMINA CONCENTRAÇÃO: 5,5, FORM | Em julgamento (aceitação, habilitação ou diligência)
+     a favor: admissão de produto sem registro: edital admite produto sem registro (pré-qualificação OMS ou registro ICH)
+     contra:  prazo: sem prazo aberto (em julgamento (aceitação, habilitação ou diligência))
+  58 |  45% | PE 90086/2026               |    6 | TOFERSEN CONCENTRAÇÃO: 6,7, FORMA FA | Em julgamento (aceitação, habilitação ou diligência)
+     a favor: admissão de produto sem registro: edital admite produto sem registro (pré-qualificação OMS ou registro ICH)
+     contra:  prazo: sem prazo aberto (em julgamento (aceitação, habilitação ou diligência))
+  58 |  45% | PE 90086/2026               |    7 | SULTIAMO CONCENTRAÇÃO: 50            | Em julgamento (aceitação, habilitação ou diligência)
+     a favor: admissão de produto sem registro: edital admite produto sem registro (pré-qualificação OMS ou registro ICH)
+     contra:  prazo: sem prazo aberto (em julgamento (aceitação, habilitação ou diligência))
+  58 |  45% | PE 90076/2026               |    1 | RIFABUTINA CONCENTRAÇÃO: 150         | Homologado
+     a favor: admissão de produto sem registro: edital admite produto sem registro (pré-qualificação OMS ou registro ICH)
+     contra:  prazo: sem prazo aberto (homologado)
+  58 |  45% | PE 90078/2026               |    1 | Pitolisant concentração: 17,8        | Homologado
+     a favor: admissão de produto sem registro: edital admite produto sem registro (pré-qualificação OMS ou registro ICH)
+     contra:  prazo: sem prazo aberto (homologado)
+  58 |  45% | PE 90078/2026               |    2 | Pitolisant concentração: 17,8        | Fracassado
+     a favor: admissão de produto sem registro: edital admite produto sem registro (pré-qualificação OMS ou registro ICH)
+     contra:  prazo: sem prazo aberto (fracassado)
+  58 |  45% | PE 90078/2026               |    3 | Pitolisant concentração: 17,8        | Fracassado
+     a favor: admissão de produto sem registro: edital admite produto sem registro (pré-qualificação OMS ou registro ICH)
+     contra:  prazo: sem prazo aberto (fracassado)
+  58 |  45% | PE 90078/2026               |    4 | Anacinra concentração: 150, forma fa | Fracassado
+     a favor: admissão de produto sem registro: edital admite produto sem registro (pré-qualificação OMS ou registro ICH)
+     contra:  prazo: sem prazo aberto (fracassado)
+  58 |  45% | PE 90114/2026               |    3 | Quinidina Sulfato dosagem: 200       | Em julgamento (aceitação, habilitação ou diligência)
+     a favor: admissão de produto sem registro: edital admite produto sem registro (pré-qualificação OMS ou registro ICH)
+     contra:  prazo: prazo informado (diligência/proposta) vencido em 2026-11-23
+  58 |  45% | PE 90114/2026               |    4 | ESTIRIPENTOL CONCENTRAÇÃO: 500       | Em julgamento (aceitação, habilitação ou diligência)
+     a favor: admissão de produto sem registro: edital admite produto sem registro (pré-qualificação OMS ou registro ICH)
+     contra:  prazo: sem prazo aberto (em julgamento (aceitação, habilitação ou diligência))
+  58 |  45% | PE 90114/2026               |    5 | Estiripentol concentração: 250       | Em julgamento (aceitação, habilitação ou diligência)
+     a favor: admissão de produto sem registro: edital admite produto sem registro (pré-qualificação OMS ou registro ICH)
+     contra:  prazo: sem prazo aberto (em julgamento (aceitação, habilitação ou diligência))
+  58 |  45% | PE 90114/2026               |    6 | Estiripentol concentração: 250, form | Em julgamento (aceitação, habilitação ou diligência)
+     a favor: admissão de produto sem registro: edital admite produto sem registro (pré-qualificação OMS ou registro ICH)
+     contra:  prazo: sem prazo aberto (em julgamento (aceitação, habilitação ou diligência))
+  58 |  45% | PE 90114/2026               |    7 | Estiripentol concentração: 500, form | Em julgamento (aceitação, habilitação ou diligência)
+     a favor: admissão de produto sem registro: edital admite produto sem registro (pré-qualificação OMS ou registro ICH)
+     contra:  prazo: sem prazo aberto (em julgamento (aceitação, habilitação ou diligência))
+  58 |  45% | PE 90114/2026               |    9 | Diazóxido concentraçao: 50, forma fa | Em julgamento (aceitação, habilitação ou diligência)
+     a favor: admissão de produto sem registro: edital admite produto sem registro (pré-qualificação OMS ou registro ICH)
+     contra:  prazo: prazo informado (diligência/proposta) vencido em 2026-11-23
+  58 |  45% | PE 90114/2026               |   10 | Diazóxido concentraçao: 25           | Em julgamento (aceitação, habilitação ou diligência)
+     a favor: admissão de produto sem registro: edital admite produto sem registro (pré-qualificação OMS ou registro ICH)
+     contra:  prazo: sem prazo aberto (em julgamento (aceitação, habilitação ou diligência))
+  58 |  45% | PE 90114/2026               |   11 | Diazóxido concentraçao: 100          | Em julgamento (aceitação, habilitação ou diligência)
+     a favor: admissão de produto sem registro: edital admite produto sem registro (pré-qualificação OMS ou registro ICH)
+     contra:  prazo: sem prazo aberto (em julgamento (aceitação, habilitação ou diligência))
+  58 |  45% | 250005-90150-2025           |    1 | Rifampicina                          | Homologado
+     a favor: admissão de produto sem registro: edital admite produto sem registro (pré-qualificação OMS ou registro ICH)
+     contra:  prazo: sem prazo aberto (homologado)
+  58 |  45% | 250005-90151-2025           |    1 | Prednisona                           | Homologado
+     a favor: admissão de produto sem registro: edital admite produto sem registro (provas não identificadas)
+     contra:  prazo: sem prazo aberto (homologado)
+  58 |  45% | 250005-90151-2025           |    2 | Prednisona                           | Fracassado
+     a favor: admissão de produto sem registro: edital admite produto sem registro (provas não identificadas)
+     contra:  prazo: sem prazo aberto (fracassado)
+  52 |  45% | PE 90121/2026               |    1 | SILDENAFILA COMPOSIÇÃO: SAL CITRATO, | Propostas abertas
+     a favor: prazo: 12 dias até o fim das propostas (2026-12-07)
+     contra:  admissão de produto sem registro: sem cláusula no edital; o mesmo princípio ativo já fracassou antes
+  43 |  75% | 250005-162-2027             |    1 | IMUNOGLOBULINA HUMANA CONCENTRAÇÃO:  | Fracassado
+     a favor: margem estimada: custo desembarcado R$ 475,73 contra mercado R$ 1.715,00 (margem +72%)
+     contra:  admissão de produto sem registro: edital não indica admissão de produto sem registro; prazo: sem prazo aberto (fracassado)
+  43 |  75% | PE 90114/2026               |    1 | TOLVAPTANA CONCENTRAÇÃO: 15          | Em julgamento (aceitação, habilitação ou diligência)
+     a favor: admissão de produto sem registro: edital admite produto sem registro (pré-qualificação OMS ou registro ICH)
+     contra:  margem estimada: custo desembarcado R$ 7,43 contra edital R$ 6,34 (margem -17%); prazo: sem prazo aberto (em julgamento (aceitação, habilitação ou diligência))
+  43 |  75% | PE 90114/2026               |    2 | Tolvaptana concentração: 30          | Em julgamento (aceitação, habilitação ou diligência)
+     a favor: admissão de produto sem registro: edital admite produto sem registro (pré-qualificação OMS ou registro ICH)
+     contra:  margem estimada: custo desembarcado R$ 14,87 contra edital R$ 8,86 (margem -68%); prazo: sem prazo aberto (em julgamento (aceitação, habilitação ou diligência))
+  40 |  45% | 250005-90052-2026           |    1 | Rivastigmina                         | Homologado
+     contra:  admissão de produto sem registro: sem cláusula no edital; o mesmo princípio ativo já fracassou antes; prazo: sem prazo aberto (homologado)
+  40 |  45% | 250005-90052-2026           |    2 | Gilteritinibe                        | Homologado
+     contra:  admissão de produto sem registro: sem cláusula no edital; o mesmo princípio ativo já fracassou antes; prazo: sem prazo aberto (homologado)
+  40 |  45% | 250005-90052-2026           |    3 | Metformina cloridrato                | Deserto
+     contra:  admissão de produto sem registro: sem cláusula no edital; o mesmo princípio ativo já fracassou antes; prazo: sem prazo aberto (deserto)
+  40 |  45% | 250005-90052-2026           |    4 | Metformina cloridrato                | Fracassado
+     contra:  admissão de produto sem registro: sem cláusula no edital; o mesmo princípio ativo já fracassou antes; prazo: sem prazo aberto (fracassado)
+  40 |  45% | 250005-90052-2026           |    5 | Trifluridina                         | Fracassado
+     contra:  admissão de produto sem registro: sem cláusula no edital; o mesmo princípio ativo já fracassou antes; prazo: sem prazo aberto (fracassado)
+  40 |  45% | 250005-90052-2026           |    6 | Pirtobrutinibe                       | Homologado
+     contra:  admissão de produto sem registro: sem cláusula no edital; o mesmo princípio ativo já fracassou antes; prazo: sem prazo aberto (homologado)
+  40 |  45% | 250005-90052-2026           |    7 | Anagrelida cloridrato                | Homologado
+     contra:  admissão de produto sem registro: sem cláusula no edital; o mesmo princípio ativo já fracassou antes; prazo: sem prazo aberto (homologado)
+  40 |  45% | 250005-90052-2026           |    8 | Teriparatida                         | Homologado
+     contra:  admissão de produto sem registro: sem cláusula no edital; o mesmo princípio ativo já fracassou antes; prazo: sem prazo aberto (homologado)
+  40 |  45% | 250005-90052-2026           |    9 | Hemina                               | Fracassado
+     contra:  admissão de produto sem registro: sem cláusula no edital; o mesmo princípio ativo já fracassou antes; prazo: sem prazo aberto (fracassado)
+  40 |  45% | 250005-90052-2026           |   10 | Canabidiol                           | Fracassado
+     contra:  admissão de produto sem registro: sem cláusula no edital; o mesmo princípio ativo já fracassou antes; prazo: sem prazo aberto (fracassado)
+  40 |  45% | 250005-90052-2026           |   11 | Canabidiol                           | Fracassado
+     contra:  admissão de produto sem registro: sem cláusula no edital; o mesmo princípio ativo já fracassou antes; prazo: sem prazo aberto (fracassado)
+  40 |  45% | 250005-599-2026             |    1 | Dabigatrana Etexilato concentração:  | Deserto
+     contra:  admissão de produto sem registro: sem cláusula no edital; o mesmo princípio ativo já fracassou antes; prazo: sem prazo aberto (deserto)
+  40 |  45% | 250005-599-2026             |    2 | Dabigatrana Etexilato concentração:  | Deserto
+     contra:  admissão de produto sem registro: sem cláusula no edital; o mesmo princípio ativo já fracassou antes; prazo: sem prazo aberto (deserto)
+  40 |  45% | PE 90090/2026               |    1 | Vismodegibe concentração: 150        | Homologado
+     contra:  admissão de produto sem registro: sem cláusula no edital; o mesmo princípio ativo já fracassou antes; prazo: sem prazo aberto (homologado)
+  40 |  45% | PE 90090/2026               |    2 | Ibrutinibe concentração: 140         | Homologado
+     contra:  admissão de produto sem registro: sem cláusula no edital; o mesmo princípio ativo já fracassou antes; prazo: sem prazo aberto (homologado)
+  40 |  45% | PE 90090/2026               |    3 | Ibrutinibe concentração: 420         | Homologado
+     contra:  admissão de produto sem registro: sem cláusula no edital; o mesmo princípio ativo já fracassou antes; prazo: sem prazo aberto (homologado)
+  40 |  45% | PE 90090/2026               |    4 | Fulvestranto características adicion | Homologado
+     contra:  admissão de produto sem registro: sem cláusula no edital; o mesmo princípio ativo já fracassou antes; prazo: sem prazo aberto (homologado)
+  40 |  45% | PE 90090/2026               |    5 | Brentuximabe Vedotina concentração:  | Homologado
+     contra:  admissão de produto sem registro: sem cláusula no edital; o mesmo princípio ativo já fracassou antes; prazo: sem prazo aberto (homologado)
+  40 |  45% | PE 90090/2026               |    6 | Azacitidina concentração: 100, forma | Homologado
+     contra:  admissão de produto sem registro: sem cláusula no edital; o mesmo princípio ativo já fracassou antes; prazo: sem prazo aberto (homologado)
+  40 |  45% | PE 90090/2026               |    7 | Sunitinibe composição: malato, conce | Homologado
+     contra:  admissão de produto sem registro: sem cláusula no edital; o mesmo princípio ativo já fracassou antes; prazo: sem prazo aberto (homologado)
+  40 |  45% | PE 90090/2026               |    8 | Pembrolizumabe concentração: 25, for | Homologado
+     contra:  admissão de produto sem registro: sem cláusula no edital; o mesmo princípio ativo já fracassou antes; prazo: sem prazo aberto (homologado)
+  40 |  45% | PE 90090/2026               |    9 | Belzutifano concentração: 40         | Homologado
+     contra:  admissão de produto sem registro: sem cláusula no edital; o mesmo princípio ativo já fracassou antes; prazo: sem prazo aberto (homologado)
+  40 |  45% | PE 90109/2026               |    1 | COMPLEXO PROTROMBÍNICO ATIVIDADE: 50 | Fracassado
+     contra:  admissão de produto sem registro: sem cláusula no edital; o mesmo princípio ativo já fracassou antes; prazo: sem prazo aberto (fracassado)
+  13 |  75% | 250005-441-2026             |    1 | CONCENTRADO DE FATOR DE COAGULAÇÃO F | Em julgamento (aceitação, habilitação ou diligência)
+     contra:  admissão de produto sem registro: edital não indica admissão de produto sem registro; margem estimada: custo desembarcado R$ 1,18 contra mercado R$ 0,57 (margem -107%); prazo: sem prazo aberto (em julgamento (aceitação, habilitação ou diligência))
+Gravado: monitor-licitacoes/saida/licitacoes_viabilidade.csv

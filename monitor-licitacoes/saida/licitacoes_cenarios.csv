@@ -1,0 +1,31 @@
+﻿contratacao;pregao;item;medicamento;quantidade;preco_inr;referencia_brl;referencia_tipo;cenario;custo_brl;margem;fob_maximo_inr;total_brl;acima_da_referencia
+250005-162-2027;;1;Imunoglobulina humana 5 g;865624.0;8000.0;1715.0;mercado;Base;475.728;0.7226;28840.01;411801574.27;não
+250005-162-2027;;1;Imunoglobulina humana 5 g;865624.0;8000.0;1715.0;mercado;Câmbio +10%;523.3008;0.6949;26218.19;452981731.7;não
+250005-162-2027;;1;Imunoglobulina humana 5 g;865624.0;8000.0;1715.0;mercado;Imposto de importação 10%;522.368;0.6954;26265.01;452174277.63;não
+250005-162-2027;;1;Imunoglobulina humana 5 g;865624.0;8000.0;1715.0;mercado;Imposto de importação 18%;559.68;0.6737;24514.01;484472440.32;não
+250005-162-2027;;1;Imunoglobulina humana 5 g;865624.0;8000.0;1715.0;mercado;Frete refrigerado 12%;502.656;0.7069;27295.01;435111097.34;não
+250005-162-2027;;1;Imunoglobulina humana 5 g;865624.0;8000.0;1715.0;mercado;Desconto de 5% por volume;451.9416;0.7365;30357.9;391211495.56;não
+250005-441-2026;;1;Concentrado de fator IX;230000000.0;19.8;0.57;mercado;Base;1.1774;-1.0657;9.59;270808164.0;sim
+250005-441-2026;;1;Concentrado de fator IX;230000000.0;19.8;0.57;mercado;Câmbio +10%;1.2952;-1.2722;8.71;297888980.4;sim
+250005-441-2026;;1;Concentrado de fator IX;230000000.0;19.8;0.57;mercado;Imposto de importação 10%;1.2929;-1.2682;8.73;297357984.0;sim
+250005-441-2026;;1;Concentrado de fator IX;230000000.0;19.8;0.57;mercado;Imposto de importação 18%;1.3852;-1.4302;8.15;318597840.0;sim
+250005-441-2026;;1;Concentrado de fator IX;230000000.0;19.8;0.57;mercado;Frete refrigerado 12%;1.2441;-1.1826;9.07;286136928.0;sim
+250005-441-2026;;1;Concentrado de fator IX;230000000.0;19.8;0.57;mercado;Desconto de 5% por volume;1.1186;-0.9624;10.09;257267755.8;sim
+250005-709-2026;90114/2026;1;Tolvaptana 15 mg;20340.0;125.0;6.34;edital;Base;7.4333;-0.1724;106.62;151192.31;sim
+250005-709-2026;90114/2026;1;Tolvaptana 15 mg;20340.0;125.0;6.34;edital;Câmbio +10%;8.1766;-0.2897;96.92;166311.54;sim
+250005-709-2026;90114/2026;1;Tolvaptana 15 mg;20340.0;125.0;6.34;edital;Imposto de importação 10%;8.162;-0.2874;97.1;166015.08;sim
+250005-709-2026;90114/2026;1;Tolvaptana 15 mg;20340.0;125.0;6.34;edital;Imposto de importação 18%;8.745;-0.3793;90.62;177873.3;sim
+250005-709-2026;90114/2026;1;Tolvaptana 15 mg;20340.0;125.0;6.34;edital;Frete refrigerado 12%;7.854;-0.2388;100.9;159750.36;sim
+250005-709-2026;90114/2026;1;Tolvaptana 15 mg;20340.0;125.0;6.34;edital;Desconto de 5% por volume;7.0616;-0.1138;112.23;143632.69;sim
+250005-709-2026;90114/2026;2;Tolvaptana 30 mg;6000.0;250.0;8.86;edital;Base;14.8665;-0.6779;148.99;89199.0;sim
+250005-709-2026;90114/2026;2;Tolvaptana 30 mg;6000.0;250.0;8.86;edital;Câmbio +10%;16.3532;-0.8457;135.45;98118.9;sim
+250005-709-2026;90114/2026;2;Tolvaptana 30 mg;6000.0;250.0;8.86;edital;Imposto de importação 10%;16.324;-0.8424;135.69;97944.0;sim
+250005-709-2026;90114/2026;2;Tolvaptana 30 mg;6000.0;250.0;8.86;edital;Imposto de importação 18%;17.49;-0.974;126.64;104940.0;sim
+250005-709-2026;90114/2026;2;Tolvaptana 30 mg;6000.0;250.0;8.86;edital;Frete refrigerado 12%;15.708;-0.7729;141.01;94248.0;sim
+250005-709-2026;90114/2026;2;Tolvaptana 30 mg;6000.0;250.0;8.86;edital;Desconto de 5% por volume;14.1232;-0.594;156.83;84739.05;sim
+250005-709-2026;90114/2026;8;Epinefrina 0,5 mg/mL caneta;910.0;13000.0;1390.0;mercado;Base;773.058;0.4438;23374.7;703482.78;não
+250005-709-2026;90114/2026;8;Epinefrina 0,5 mg/mL caneta;910.0;13000.0;1390.0;mercado;Câmbio +10%;850.3638;0.3882;21249.73;773831.06;não
+250005-709-2026;90114/2026;8;Epinefrina 0,5 mg/mL caneta;910.0;13000.0;1390.0;mercado;Imposto de importação 10%;848.848;0.3893;21287.67;772451.68;não
+250005-709-2026;90114/2026;8;Epinefrina 0,5 mg/mL caneta;910.0;13000.0;1390.0;mercado;Imposto de importação 18%;909.48;0.3457;19868.5;827626.8;não
+250005-709-2026;90114/2026;8;Epinefrina 0,5 mg/mL caneta;910.0;13000.0;1390.0;mercado;Frete refrigerado 12%;816.816;0.4124;22122.49;743302.56;não
+250005-709-2026;90114/2026;8;Epinefrina 0,5 mg/mL caneta;910.0;13000.0;1390.0;mercado;Desconto de 5% por volume;734.4051;0.4717;24604.95;668308.64;não
