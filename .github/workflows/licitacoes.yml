@@ -81,6 +81,7 @@ jobs:
       # Etapa 4b: um unico e-mail (e Telegram, se configurado) com os alertas novos.
       # Sem os Secrets, nada e enviado e os alertas ficam pendentes no banco.
       - name: Enviar alertas
+        if: ${{ !cancelled() }}   # roda mesmo se a coleta falhar em parte
         env:
           LIC_DB_PATH: monitor.db
           # Gmail por padrao; um Secret com o mesmo nome substitui o valor.
@@ -99,6 +100,7 @@ jobs:
             cat monitor-licitacoes/saida/licitacoes_alertas.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Commit do banco e da lista de candidatas
+        if: ${{ !cancelled() }}   # guarda o progresso mesmo se a coleta falhar em parte
         run: |
           git config user.name  "g3-bot"
           git config user.email "g3.representante@gmail.com"
