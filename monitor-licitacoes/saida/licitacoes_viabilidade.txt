@@ -95,7 +95,7 @@ Nota | Cob. | Pregão / contratação        | Item | Medicamento               
   58 |  45% | 250005-90151-2025           |    2 | Prednisona                           | Fracassado
      a favor: admissão de produto sem registro: edital admite produto sem registro (provas não identificadas)
      contra:  prazo: sem prazo aberto (fracassado)
-  52 |  45% | PE 90121/2026               |    1 | SILDENAFILA COMPOSIÇÃO: SAL CITRATO, | Propostas abertas
+  51 |  45% | PE 90121/2026               |    1 | SILDENAFILA COMPOSIÇÃO: SAL CITRATO, | Propostas abertas
      a favor: prazo: 12 dias até o fim das propostas (2026-12-07)
      contra:  admissão de produto sem registro: sem cláusula no edital; o mesmo princípio ativo já fracassou antes
   43 |  75% | 250005-162-2027             |    1 | IMUNOGLOBULINA HUMANA CONCENTRAÇÃO:  | Fracassado
