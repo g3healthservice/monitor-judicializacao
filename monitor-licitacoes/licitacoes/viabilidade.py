@@ -22,6 +22,7 @@ from typing import Dict, List, Optional
 
 import yaml
 
+from .relogio import agora_brasilia
 from .resultados import FASES
 
 PASTA = Path(__file__).resolve().parent
@@ -147,7 +148,7 @@ def _prazo(fase: str, encerramento: Optional[str], prazo_manual: Optional[str],
 def avaliar_item(item: Dict, sinais: set, cot: Optional[Dict], p: Premissas,
                  agora: Optional[datetime] = None) -> Dict:
     """Ficha + nota de um item. `item` vem de relatorio.itens() com o encerramento da compra."""
-    agora = agora or datetime.now()
+    agora = agora or agora_brasilia()
     cot = cot or {}
     criterios: Dict[str, Optional[float]] = {}
     motivos: Dict[str, str] = {}

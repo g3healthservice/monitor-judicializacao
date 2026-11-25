@@ -130,7 +130,8 @@ def test_painel_publico_sem_dados_de_cotacao(banco):
     from licitacoes import painel
     _cfg, con, _cli = banco
     pagina = painel.gerar_html(con, REGRAS, AGORA)
-    assert "PE 90114/2026" in pagina and "Tolvaptana" in pagina
+    assert "Pregão 90114/2026" in pagina and "Tolvaptana" in pagina
+    assert "Como usar este painel" in pagina and "O que fazer agora" in pagina
     assert "<title>Radar de Licitações</title>" in pagina
     for privado in ("₹", "margem", "preco_inr", "custo desembarcado"):
         assert privado not in pagina.lower()

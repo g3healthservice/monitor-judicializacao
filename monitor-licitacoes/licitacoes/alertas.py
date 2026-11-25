@@ -32,6 +32,7 @@ from datetime import datetime, timedelta
 from email.message import EmailMessage
 from typing import Dict, List, Optional
 
+from .relogio import agora_brasilia
 from . import db
 
 log = logging.getLogger(__name__)
@@ -48,7 +49,7 @@ ORDEM = ["prazo", "edital_novo", "sem_sucesso", "referencia", "situacao"]
 
 
 def _agora() -> datetime:
-    return datetime.now().replace(microsecond=0)
+    return agora_brasilia()
 
 
 def acompanhadas(con: sqlite3.Connection, cotacoes: Dict[tuple, Dict]) -> set:
