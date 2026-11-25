@@ -15,6 +15,7 @@ import sqlite3
 from datetime import datetime
 from typing import Dict, List, Optional
 
+from .relogio import agora_brasilia
 from . import db
 from .texto import normalizar
 
@@ -79,7 +80,7 @@ def fase(situacao_id: Optional[int], data_encerramento: Optional[str],
         return "deserto"
     if situacao_id == 3:
         return "cancelado"
-    agora = agora or datetime.now()
+    agora = agora or agora_brasilia()
     if data_encerramento:
         try:
             if datetime.fromisoformat(data_encerramento[:19]) > agora:
