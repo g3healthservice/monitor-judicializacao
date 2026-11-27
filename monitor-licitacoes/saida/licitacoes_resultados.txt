@@ -87,6 +87,17 @@ PE 90090/2026 | contratação 250005-657-2026 | 8 pts | https://pncp.gov.br/app/
      2. Prednisona                                           76.000 Comprimido   Fracassado
    Ata 00017/2026: vigência 2026-02-24 a 2027-02-24
 
+PE 90133/2026 | contratação 250005-645-2026 | 6 pts | https://pncp.gov.br/app/editais/00394544000185/2026/2594
+     1. Pirfenidona concentração: 267                       227.340 Cápsula      Propostas abertas
+     2. Asciminibe concentração: 40                          12.180 Comprimido   Propostas abertas
+     3. Belinostate concentração: 500, forma farmacêutic      3.375 Frasco-Ampol Propostas abertas
+     4. Talquetamabe concentração: 2, forma farmacêutica        150 Frasco 1.5 M Propostas abertas
+     5. Talquetamabe concentração: 40, forma farmacêutic        150 Frasco 1 ML  Propostas abertas
+     6. LACOSAMIDA CONCENTRAÇÃO: 10, FORMA FARMACÊUTICA:      1.980 Frasco 20 ML Propostas abertas
+     7. Zolbetuximabe concentração: 100, forma farmacêut        705 Frasco-Ampol Propostas abertas
+     8. SOTATERCEPTE CONCENTRAÇÃO: 45, FORMA FARMACÊUTIC        675 Frasco-Ampol Propostas abertas
+     9. Sotatercepte concentração: 60, forma farmacêutic        150 Frasco-Ampol Propostas abertas
+
 PE 90121/2026 | contratação 250005-738-2026 | 6 pts | https://pncp.gov.br/app/editais/00394544000185/2026/2497
      1. SILDENAFILA COMPOSIÇÃO: SAL CITRATO, CONCENTRAÇÃ    682.300 Comprimido   Propostas abertas
 

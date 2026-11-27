@@ -1,4 +1,4 @@
-# Demandas candidatas (11)
+# Demandas candidatas (12)
 
 | Pontos | Pregão | Contratação | Encerra | Objeto |
 |---|---|---|---|---|
@@ -16,6 +16,7 @@ CONTRATAÇÃO Nº 557/2026
 | 8 | — | [250005-599-2026](https://pncp.gov.br/app/editais/00394544000185/2026/1534) | 2026-08-12 | Aquisição de DABIGATRANA ETEXILATO (75MG E 110MG) |
 | 8 | — | [250005-90052-2026](https://pncp.gov.br/app/editais/00394544000185/2026/1239) | 2026-07-03 | Registro de preços, para aquisição de MEDICAMENTOS PARA ATENDIMENTO DE DETERMINAÇÕES JUDICIAIS, conforme edital e seus a |
 | 8 | — | [250005-90151-2025](https://pncp.gov.br/app/editais/00394544000185/2025/3117) | 2026-01-15 | Registro de Preços para eventual aquisição de PREDNISONA 20MG, conforme especificações do instrumento convocatório. |
+| 6 | 90133/2026 | [250005-645-2026](https://pncp.gov.br/app/editais/00394544000185/2026/2594) | 2026-12-09 | Pregão Eletrônico SRP nº 900133/2026 para fins de Registro de Preço para aquisição aquisição de PIRFENIDONA, ASCIMINIBE, |
 | 6 | 90121/2026 | [250005-738-2026](https://pncp.gov.br/app/editais/00394544000185/2026/2497) | 2026-12-07 | SILDENAFILA, SAL CITRATO, 50MG |
 
 ## 90114/2026 — 16 pontos
@@ -141,6 +142,16 @@ Fonte: https://pncp.gov.br/app/editais/00394544000185/2025/3117 (lido em 2026-11
 - **Item anterior fracassado, deserto ou cancelado (mesmo principio ativo)** (alto, histórico de resultados): “item 1 (prednisona): fracassado em contratação 250005-90149-2025, item 2, publicado em 2025-12-30; item 2 (prednisona): fracassado em contratação 250005-90149-2025, item 2, publicado em 2025-12-30”
 - **Admite expressamente produto sem registro na Anvisa** (alto, 25000505901512025000, p. 32): “medicamento sem registro na Anvisa, sendo que, entre a data de fabricação e a data da entrega, não deverá ter transcorrido mais de 30% (trinta por cento) do prazo de validade. 5.5.1.”
 - **Permite empresa estrangeira ou nacional** (medio, 25000505901512025000, p. 4): “4.6.13. Empresas estrangeiras que não tenham representação legal no Brasil com poderes expressos para receber citação e responder administrativa ou judicialmente;”
+
+## 90133/2026 — 6 pontos
+
+Pregão Eletrônico SRP nº 900133/2026 para fins de Registro de Preço para aquisição aquisição de PIRFENIDONA, ASCIMINIBE, BELINOSTATE, TALQUETAMABE, LACOSAMIDA, ZOLBETUXIMABE e SOTATERCEPTE, visando ao atendimento de determinações judiciais, em atendimento às demandas da Coordenação-Geral de Execução e Logística de Demandas Judiciais – CGLJUD/DJUD/SE/MS, conforme condições, quantidades e exigências estabelecidas no Termo de Referência e no Edital do certame.
+
+Fonte: https://pncp.gov.br/app/editais/00394544000185/2026/2594 (lido em 2026-11-27)
+
+- **Item anterior fracassado, deserto ou cancelado (mesmo principio ativo)** (alto, histórico de resultados): “item 6 (lacosamida): fracassado em contratação 250005-90041-2026, item 3, publicado em 2026-04-28; item 6 (lacosamida): fracassado em contratação 250005-90041-2026, item 4, publicado em 2026-04-28”
+- **Permite empresa estrangeira ou nacional** (medio, EDITAL PE SRP 90133_2026 - DEMANDAS JUDICIAIS.pdf, p. 4): “3.5.13. Empresas estrangeiras que não tenham representação legal no Brasil com poderes expressos para receber citação e responder administrativa ou judicialmente;”
+- **Medicamento de demanda judicial (CGLJUD)** (baixo, objeto): “Pregão Eletrônico SRP nº 900133/2026 para fins de Registro de Preço para aquisição aquisição de PIRFENIDONA, ASCIMINIBE, BELINOSTATE, TALQUETAMABE, LACOSAMIDA, ZOLBETUXIMABE e SOTATERCEPTE, visando ao atendimento de determinações judiciais, em atendimento às demandas da Coordenação-Geral de Execução e Logística de Demandas Judiciais – CGLJUD/DJUD/SE/MS, conforme condições, quantidades e exigências”
 
 ## 90121/2026 — 6 pontos
 
